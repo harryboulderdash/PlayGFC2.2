@@ -1,0 +1,5 @@
+name = demo_ajax_form
+description = This module contains demo ajax form for  Drupal.
+core = 7.x
+
+files[] = demo.module

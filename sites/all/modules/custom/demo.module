@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * Demo module, Basic Ajax form submit (Ajax framework).
+ */
+
+ /**
+  * Implements hook_menu().
+  *
+  *
+  *
+  *
+  * how to use the callback without a form
+  * http://www.seanbuscay.com/ajax-reader-demo/
+  *
+  *
+  */
+function demo_menu() {
+    return array(
+        'demo/newsletter' => array(
+            'page callback' => 'drupal_get_form',
+            'page arguments' => array('demo_demo_form'),
+            'access callback' => TRUE,
+            'type' => MENU_CALLBACK,
+        ),
+    );
+}
+
+ /**
+  * A simple newsletter subscribe form.
+  */
+function demo_demo_form($form,&$form_state, $member_id) {
+    //get url segments count to retrieve tid and mid variables with
+
+    $count = count($form_state['build_info']['args']);
+    $value = $form_state['build_info']['args'][0];
+
+
+
+    return array(
+
+
+        'memberid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $member_id,
+        ),
+
+        'submit' => array(
+            '#type' => 'submit',
+            //'#value' => $member_id,
+            '#value' => t('Subscribe'),
+            '#ajax' => array(
+                'callback' => 'demo_form_ajax_submit',
+                'wrapper' => 'demo-demo-form',
+                'method' => 'replace',
+                'effect' => 'fade',
+            ),
+        ),
+    );
+}
+
+/**
+ * Ajax callback function.
+ */
+function demo_form_ajax_submit($form, $form_state) {
+    // Dummy/dumb validation for demo purpose.
+    if (!empty($form_state['input']['memberid'])) {
+        $nid = $form_state['input']['memberid'];
+        RemovePlayerFromTeam($nid);
+    }
+
+    else {
+        //return $form;
+        return 'Sent this';
+    }
+}

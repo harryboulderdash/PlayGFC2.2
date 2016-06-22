@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the GFC_CustomStuff feature.
+ */
+
+include_once 'gfc_customstuff.features.inc';

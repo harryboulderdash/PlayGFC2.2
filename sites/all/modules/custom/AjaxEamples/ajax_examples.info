@@ -1,0 +1,5 @@
+name = ajax_examples
+description = This module contains numerous ajax examples for  Drupal.
+core = 7.x
+
+files[] = ajax_examples.module

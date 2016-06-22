@@ -1,0 +1,637 @@
+
+<?php
+
+/**
+ * @file
+ * This is the main module file.
+ */
+
+define('MEMBER_ROLE', '74');
+
+
+//reference challonge API code
+include_once DRUPAL_ROOT . '/includes/challonge.class.php';
+
+/**
+ * Implementation of hook_menu().
+ */
+function manage_teams_form_menu() {
+    $items = array();
+
+    $items['teams/manage'] = array( //this creates a URL that will call this form at "teams/manage"
+        'title' => 'Join Tournament', //page title
+        'description' => 'Create and Add teams to a Tourney.',
+        'page callback' => 'drupal_get_form', //this is the function that will be called when the page is accessed.
+        'page arguments' => array('manage_teams_form_form'), //put the name of the form here
+        'access callback' => TRUE
+    );
+
+    $items['team-member-manage/%ctools_js/remove'] = array (
+        'title' => 'Remove Team Member',
+        'page callback' => 'team_member_remove_callback',
+        'page_arguments' => array(1),
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return
+
+        $items;
+}
+
+function team_member_remove_callback($ajax){
+
+try{
+        if ($ajax) {
+
+            //get url segments
+            $urlArray = explode('/', request_uri());
+            //get url segments count to retrieve tid and mid variables with
+            $count = count($urlArray);
+
+            //grab the value of the last section, which should be the nid of the team member record
+            $nid =  $urlArray[$count-1];
+
+            //get user object to check if user is logged in
+            global $user;
+
+            //make sure authenticated user is making the request
+            if($user->uid){
+            //call remove player function, passing in nid
+            RemovePlayerFromTeam($nid);
+            }
+
+
+            //$output = ctools_ajax_command_reload();
+            // Return the ajax instructions to the browser via ajax_render().
+            //print ajax_render($output);
+           //drupal_exit();
+
+            $commands = array();
+
+            $commands[] = ajax_command_invoke('.view-id-roster2', 'trigger', array('RefreshView'));
+
+           // $commands[] = ctools_ajax_command_reload();
+            ajax_deliver(array(
+                '#type' => 'ajax',
+                '#commands' => $commands,
+            ));
+
+
+           // ajax_deliver(array('#type' => 'ajax', '#commands' => $commands));
+
+            //return ajax_render($commands);
+
+            //$commands[] = ajax_command_invoke('.view-id-XXX', 'trigger', array('RefreshView'));
+
+
+        }
+    }
+    //exception handler
+         catch (Exception $e) {
+        _watchdog_log($e->getMessage());
+    }
+
+}
+
+
+function manage_teams_form_help($path, $arg) {
+
+    if ($path == 'admin/help#manage_teams_form') {
+        $output = '<h3>' . t('About') . '</h3>';
+        $output .= '<p>' . t('The form module is used to enter a new or existing team to a tourney') . '</p>';
+        return $output;
+    }
+}
+
+function manage_teams_form_block_info() {
+    $blocks = array();
+
+    $blocks['Manage_Teams_Form_Block'] = array(
+        'info' => t('Manage Teams Form Block'),
+        'cache' => DRUPAL_NO_CACHE,
+    );
+
+    $blocks['Manage_Teams_AddPlayer_Block'] = array(
+        'info' => t('Manage Teams Add Player Block'),
+        'cache' => DRUPAL_NO_CACHE,
+    );
+    return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function manage_teams_form_block_view($delta = '') {
+    $block = array();
+
+    //set user variable
+    $currentUser = $GLOBALS['user'];
+
+    //Get TID from url
+    $urlArray = explode('/', request_uri());
+    //get url segments count to retrieve tid and mid variables with
+    $tournamentID = $urlArray[(count($urlArray)) - 1];
+
+    //TODO FIX THIS****************************************************************************
+    //TODO: THE FOLLOWING CHECK IS THROWING ERRORS IF THE USER IF USER ISN'T CURRENTLY ON  TEAM
+
+    //get array of any teams user is on in this tourney
+    $teamArray = getTeamByTournamentByUser($currentUser->uid, $tournamentID);
+
+
+    switch ($delta) {
+        case 'Manage_Teams_Form_Block':
+            $block['subject'] = t('Manage Teams Form Block');
+            if(!$teamArray) {
+                $block['content'] = drupal_get_form('manage_teams_form_form');
+            }else
+            {
+                //set session team id value
+                gfc_session("current_team", key($teamArray));
+
+                $block['content'] = drupal_get_form('manage_teams_form_addPlayer_form');
+            }
+            break;
+    }
+
+    switch ($delta) {
+        case 'Manage_Teams_AddPlayer_Block':
+            $block['subject'] = t('Manage Teams Form Add Player Block');
+           //$block['content'] = drupal_get_form('manage_teams_form_addPlayer_form');
+            break;
+    }
+
+
+    return $block;
+}
+
+function manage_teams_form_form($form, &$form_state) {
+
+    /*
+     * TODO: URGENT--
+
+     *
+     * 1.   Prevent duplicate teams on submit handler
+     *
+     * 2.   when inviting a member GENERATE EMAIL with link to register and join THAT TEAM
+     *
+*/
+    //set user variable
+    $currentUser = $GLOBALS['user'];
+
+    //Get TID from url
+    $form_state['build_info']['args'] = explode('/', request_uri());
+    //get url segments count to retrieve tid and mid variables with
+    $count = count($form_state['build_info']['args']);
+    //set variable to tid value
+    $tournamentID = $form_state['build_info']['args'][$count - 1];
+
+    //INSURE THERE IS A TOURNEY ID IN URL
+    if (!strlen($tournamentID) > 12) {
+        //message that tournament is missing
+        drupal_set_message('Tournament is not specified.');
+        return;
+    }
+
+
+    //MAKE SURE USER LOGGED IN ELSE SEND TO LOGIN PAGE
+    if(!user_is_logged_in()){
+        $options = array('query' => array('destination' =>  current_path()));
+        drupal_goto('/user', $options);
+        }
+
+    //If tourney registration closed send back to details page
+    // first, load tourney and check status
+    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tourneyStatus = $tw->field_tournament_status->value();
+
+    if($tourneyStatus=="Registration Closed"){
+        drupal_set_message('Registration is now closed for this tournament. Play will begin shortly.');
+        drupal_goto('/node/493/' . $tournamentID);
+
+    }
+
+    //BUILD THE FORM
+    $form = array();
+
+    $form['Enter_Team'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Add Team to Tourney'),
+        '#collapsible' => FALSE,
+        //'#collapsed' => $collapseTeam,
+    );
+
+    $form['Enter_Team']['team_name'] = array(
+        '#type' => 'textfield', //you can find a list of available types in the form api
+        '#title' => 'Create New Team:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#attributes' => array('placeholder' => t('Enter New Team Name')),
+
+    );
+
+    $form['Enter_Team']['existing_team_name'] = array(
+        '#type' => 'select',
+        '#title' => t('Or Select a Previous Team:'),
+        '#options' => getExistingTeamsByUser($GLOBALS['user']),
+        '#empty_option'=> t('--Select Team--'),
+    );
+
+    $form['Enter_Team']['submit_button'] = array(
+        '#type' => 'submit',
+        '#name' => 'first_button',
+        '#value' => t('Next Step'),
+    );
+
+   return $form;
+}
+
+function manage_teams_form_addPlayer_form($form, &$form_state)
+{
+    //TODO: make this dynamic for adding/inviting multiple players
+    //Link to code to add number of text boxes for players dynamically
+    //https://api.drupal.org/api/examples/ajax_example%21ajax_example_graceful_degradation.inc/function/ajax_example_add_more/7
+    //
+
+    //set user variable
+    $currentUser = $GLOBALS['user'];
+
+    $urlArray = explode('/', request_uri());
+    //get url segments count to retrieve tid and mid variables with
+    $count = count($urlArray);
+    //set variable to tid value
+    $tournamentID = $urlArray[$count - 1];
+
+    //INSURE THERE IS A TOURNEY ID IN URL
+    if (!strlen($tournamentID) > 12) {
+        //message that tournament is missing
+        drupal_set_message('Tournament is not specified.');
+        return;
+    }
+
+    //MAKE SURE USER LOGGED IN
+    if(!user_is_logged_in()){
+        $options = array('query' => array('destination' =>  current_path()));
+        drupal_goto('/user', $options);
+        return;
+    }
+
+    //If tourney registration closed send back to details page
+    // first, load tourney and check status
+    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tourneyStatus = $tw->field_tournament_status->value();
+
+    //if registration closed set a message and send to tourney details page
+    if($tourneyStatus=="Registration Closed"){
+        drupal_set_message('Registration is now closed for this tournament. Play will begin shortly.');
+        drupal_goto('/node/493/' . $tournamentID);
+
+    }
+
+    //get team name being managed in current context
+    $teamName = reset(getTeamByTournamentByUser($currentUser->uid, $tournamentID));
+
+
+    $form = array();
+
+
+    //make this a new form
+    //section to add players
+    $form['Add_Players'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Manage Roster for Team: ' . $teamName),
+        '#collapsible' => FALSE,
+       // '#collapsed' => FALSE,
+        '#states' => array(
+            'visible' => array(
+                'input[name="has_team"]' => array('value' => '1'),
+            ),
+        ),
+
+    );
+
+    $form['Add_Players']['Player_Username'] = array(
+        '#type' => 'textfield', //you can find a list of available types in the form api
+        //'#title' => 'Enter Player Username:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => TRUE,
+        '#attributes' => array('placeholder' => t('Add player by: Username, Email or Gamertag.')),
+    );
+
+    $form['Add_Players']['Select_Role'] = array(
+        '#type' => 'select',
+        '#title' => t('Select a Player Role:'),
+        '#options' => getPlayerRoles(),
+//        '#required' => TRUE,
+        '#empty_option'=> t('--Choose a Role--'),
+    );
+
+    $form['Add_Players']['submit_button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Add Player to Roster'),
+    );
+
+    return $form;
+
+}
+
+function manage_teams_form_removeMember_form($form,&$form_state, $member_id,$username,$teamNID,$tournamentURL) {
+
+    return array(
+
+        'teamid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $teamNID,
+        ),
+
+        'tournamentid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $tournamentURL,
+        ),
+
+        'memberid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $member_id,
+        ),
+
+        'username' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $username,
+        ),
+
+        'submit' => array(
+            '#type' => 'submit',
+            '#value' => 'Remove',
+            '#attributes' => array('class' => array('btn-sm', 'btn-primary', 'btn')),
+
+        ),
+
+    );
+}
+
+
+/**
+ * btn-sm btn-default btn
+ * Ajax callback function for REMOVE TEAM MEMBER.
+ */
+function manage_teams_form_removeMember_form_submit($form, $form_state) {
+
+    //get url segments count to retrieve tid and mid variables with
+    $count = count(explode('/', request_uri()));
+
+    if (!empty($form_state['input']['memberid'])) {
+        $nid = $form_state['input']['memberid'];
+        $username = $form_state['input']['username'];
+        $teamID = $form_state['input']['teamid'];
+        $tournamentID = $form_state['input']['tournamentid'];
+
+        RemovePlayerFromTeam($nid);
+
+        if(updateSingleTeamStatus($tournamentID,$teamID)){
+
+            //display success message
+            drupal_set_message(t($username . ' Removed from Roster'));
+
+            return true;
+
+        }else{
+            drupal_set_message(t('Problem removing ' . $username . ' from Roster. Contact Support. '));
+
+
+            return false;
+        }
+
+        //display success message
+        drupal_set_message(t($username . ' Removed from Roster'));
+
+    }
+}
+
+function manage_teams_form_form_validate($form, &$form_state) {
+
+    try{
+    $urlArray = explode('/', request_uri());
+    //get url segments count to retrieve tid and mid variables with
+    $count = count($urlArray);
+    //set variable to tid value
+    $tournamentID = $urlArray[$count - 1];
+
+    //insure the tid is the right element based on length
+    if(!strlen($tournamentID) > 12){
+        //TODO: message that TID is missing
+        drupal_set_message('Tournament is not specified.');
+        return true;
+    }
+
+    //If tourney registration closed send back to details page
+    // first, load tourney and check status
+    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tourneyStatus = $tw->field_tournament_status->value();
+
+    //if registration closed set a message and send to tourney details page
+    if($tourneyStatus=="Registration Closed"){
+        drupal_set_message('Registration is now closed for this tournament. Play will begin shortly.');
+        drupal_goto('/node/493/' . $tournamentID);
+
+    }
+   
+    //validate that a team name was either selected or entered
+    $teamValue = trim($form_state['values']['team_name']);
+
+    if(empty($teamValue)){
+
+        $teamValue = trim($form_state['values']['existing_team_name']);
+    }
+    if(empty($teamValue))
+    {
+        form_set_error('team_name',t('You must either create a team or choose one to enter:'));
+        return true;
+    }
+
+    //prevent duplicate team names in same tourney
+  if(isTeamNameTaken($tournamentID, $teamValue)){
+        //advise user to choose another team name or a new variant
+        form_set_error('team_name',t('The team name ' . $teamValue . ' is taken in this tournament. Try again with a different or altered team name.'));
+        return true;
+    }
+
+    }
+    catch (EntityMetadataWrapperException $exc) {
+        _watchdog_log($exc->getMessage(),$exc);
+
+        return false;
+
+    }
+
+}
+
+function manage_teams_form_form_submit($form, &$form_state) {
+//    dpm($form_state);
+
+    try {
+
+        $urlArray = explode('/', request_uri());
+
+        //get url segments count to retrieve tid and mid variables with
+        $count = count($urlArray);
+
+        //set variable to tid value
+        $tournamentID = $urlArray[$count - 1];
+
+        if(strlen($tournamentID) > 12){ //insure the tid is the right element based on length
+
+            //translate tid into NID
+            $tournament_id =  getTournamentNodeIDByChallongeID($tournamentID);
+        }
+        else{
+            //TODO: message that TID is missing
+            drupal_set_message('Tournament is not specified.');
+            return;
+        }
+
+        if(!empty($form_state['values']['team_name'])) {
+            //use new team if provided
+            $teamName = $form_state['values']['team_name'];
+            $createTeam = TRUE;
+        }
+        elseif(!empty($form_state['values']['existing_team_name']))
+        {
+            //otherwise use existing team
+            $teamName = $form_state['values']['existing_team_name'];
+            $createTeam = FALSE;
+        }
+        else
+        {
+            drupal_set_message('No team is specified.');
+        }
+
+        $teamNID = createTeamAndAddToTournament($tournament_id, $teamName, $GLOBALS['user'],$createTeam);
+
+        //add team id to session for next form
+        gfc_session("current_team", "$teamNID");
+
+        //$myVar = gfc_session("current_team");
+
+    }
+        //exception handler
+    catch (Exception $e) {
+        _watchdog_log($e->getMessage());
+    }
+
+
+}
+
+function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
+
+    $playerValue = trim($form_state['values']['Player_Username']);
+
+    if(empty($playerValue)){
+
+        form_set_error('team_name',t('player info is required.'));
+
+    }
+
+}
+
+function manage_teams_form_addPlayer_form_submit($form, &$form_state){
+
+    try {
+        //get session value for the team being worked with on last form
+        $teamID = gfc_session("current_team");
+
+        $urlArray = explode('/', request_uri());
+
+        //get url segments count to retrieve tid and mid variables with
+        $count = count($urlArray);
+
+        //set variable to tid value
+        $tournamentID = $urlArray[$count - 1];
+
+        if (strlen($tournamentID) > 12) { //insure the tid is the right element based on length
+
+            //translate tid into NID
+            $tournament_id = getTournamentNodeIDByChallongeID($tournamentID);
+        } else {
+            //message that tournament is missing
+            drupal_set_message('Tournament is not specified.');
+            return;
+        }
+
+        //use this instead of UID, since it's a different person
+        $playerUsername = trim($form_state['values']['Player_Username']);
+        $roleID = trim($form_state['values']['Select_Role']);
+
+        //default role to 'Member'
+        if(!$roleID){
+            $roleID = MEMBER_ROLE; //member taxon id
+
+        }
+
+        //TODO DEBUG ONLY
+        //drupal_set_message('player Username : ' . $playerUsername . '  ' .  $roleID);
+        //return;
+
+        //find user if they exist
+        $playerUID = LookupPlayerByAttribute($playerUsername);
+
+
+        //if player not found stop and provide warning
+        if (!$playerUID) {
+            //TODO: message that TID is missing
+            //drupal_set_message('This player not yet registered with GFC, would you like to invite them?');
+            drupal_set_message('This player not yet registered with GFC, once registered you can add to team.');
+
+            return;
+
+            //TODO: if yes then trigger an email back to accept and complete registration and tourney entry.
+        }
+
+        //Load Team context based on current user
+        //NOTE: don't need unless abandon session usage
+        //$tourneyArray = getTeamByTournamentByUser($GLOBALS['user']->uid, $tournamentID);
+
+        //make sure player not already in a team in the same tournament
+        if(!getTeamByTournamentByUser($playerUID, $tournamentID)) {
+
+            //set invite accepted to 0 until later when player confirms
+            $inviteAccepted = 0;
+
+            if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted)){
+                //display success message
+                drupal_set_message(t($playerUsername . ' Added to Roster'));
+            }else{
+                //failure message
+                drupal_set_message(t('Warning: ' . $playerUsername . ' not added Roster. Try again, and if problem persists contact support via Live Chat.'));
+            };
+
+        }else{
+            $teamName = reset(getTeamByTournamentByUser($playerUID, $tournamentID));
+
+            drupal_set_message(t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '),'error');
+
+        }
+
+        //Run Teams status update for just the team modified
+        if(updateSingleTeamStatus($tournamentID,$teamID)){
+
+            return true;
+
+        }else{
+
+            return false;
+        }
+
+    }
+
+//exception handler
+    catch (Exception $e) {
+        _watchdog_log($e->getMessage());
+    }
+
+
+}

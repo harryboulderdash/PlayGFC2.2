@@ -1,0 +1,338 @@
+
+<?php
+
+/**
+ * @file
+ * This is the main module file.
+ */
+
+//reference challonge API code
+include_once DRUPAL_ROOT . '/includes/challonge.class.php';
+
+    /**
+     * Implementation of hook_menu().
+     */
+    function manage_tournaments_menu() {
+        $items = array();
+
+        $items['tournament/start'] = array( //this creates a URL that will call this form
+            'title' => 'Start Tournament', //page title
+            'description' => 'Start a Tourney Manually.',
+            'page callback' => 'drupal_get_form', //this is the function that will be called when the page is accessed.
+            'page arguments' => array('manage_tournaments_form'), //put the name of the form here
+            'access callback' => TRUE
+        );
+        return $items;
+    }
+
+function manage_tournaments_help($path, $arg) {
+
+  if ($path == 'admin/help#start_tournament_form') {
+    $output = '<h3>' . t('About') . '</h3>';
+    $output .= '<p>' . t('This for is explicitly and only for manually triggering the START tourney function.') . '</p>';
+    return $output;
+  }
+}
+
+function manage_tournaments_block_info(){
+    $blocks = array();
+
+    $blocks['Manage_Tournaments_Form_Block'] = array(
+        'info' => t('Manage Tournaments Form Block'),
+        'cache' => DRUPAL_NO_CACHE,
+    );
+    return $blocks;
+
+
+}
+
+function manage_tournaments_block_view($delta = ''){
+    switch ($delta) {
+        case 'Manage_Tournaments_Form_Block':
+            $block['subject'] = t('Start Tourney');
+            $block['content'] = drupal_get_form('manage_tournaments_form');
+            break;
+        case 'Manage_Tournaments_Validate_Block':
+            $block['subject'] = t('Validate Tourney');
+            $block['content'] = drupal_get_form('manage_tournaments_validate_form');
+            break;
+        case 'Manage_Tournaments_EvictTeams_Block':
+            $block['subject'] = t('Finalize Teams');
+            $block['content'] = drupal_get_form('manage_tournaments_evict_form');
+            break;
+        case 'Manage_Tournaments_UpdateTeamStatus_Block':
+            $block['subject'] = t('Update Eligibility');
+            $block['content'] = drupal_get_form('manage_tournaments_updatestatus_form');
+            break;
+        case 'Manage_Tournaments_CompleteTournament_Block';
+            $block['subject'] = t('Complete Tournament');
+            $block['content'] = drupal_get_form('manage_tournaments_complete_tournament_form');
+            break;
+    }
+    return $block;
+
+
+}
+function manage_tournaments_form($form, &$form_state) {
+	$form = array();
+
+    $form['Start_Tourney'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Manually Start Tourney'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+    );
+
+	$form['Start_Tourney']['submit']=array(
+			'#type'=>'submit',
+            '#title'=>'Start: EXPERT ONLY, USE CAUTION!',
+			'#value'=>t('Start: EXPERT ONLY, USE CAUTION!')
+	);
+
+
+    //load them in form state to pass into the form modal
+   // $form_state['build_info']['args'] = explode('/', request_uri());
+
+
+    return $form;
+}
+
+function manage_tournaments_validate_form($form, &$form_state) {
+    $form = array();
+
+    $form['Validate_Tourney'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Validate & Prep Tourney'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+    );
+
+    $form['Validate_Tourney']['submit']=array(
+        '#type'=>'submit',
+        '#title'=>'Validate & Prepare',
+        '#value'=>t('Validate & Prepare')
+    );
+
+
+    //load them in form state to pass into the form modal
+    // $form_state['build_info']['args'] = explode('/', request_uri());
+
+
+    return $form;
+}
+
+function manage_tournaments_evict_form($form, &$form_state){
+    $form = array();
+
+    $form['EvictTeams_Tourney'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Finalize Teams'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+    );
+
+    $form['EvictTeams_Tourney']['submit']=array(
+        '#type'=>'submit',
+        '#title'=>'Finalize Teams',
+        '#value'=>t('Finalize Teams')
+    );
+
+
+    //load them in form state to pass into the form modal
+    // $form_state['build_info']['args'] = explode('/', request_uri());
+
+
+    return $form;
+}
+
+function manage_tournaments_complete_tournament_form($form, &$form_state){
+    $form = array();
+
+    $form['FinishAndLockResults_Tourney'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Complete Tournament'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+    );
+
+    $form['FinishAndLockResults_Tourney']['submit']=array(
+        '#type'=>'submit',
+        '#title'=>'Complete Tournament - Lock Results!',
+        '#value'=>t('Complete Tournament')
+    );
+
+
+    return $form;
+    
+}
+
+function manage_tournaments_updatestatus_form($form, &$form_state){
+    $form = array();
+
+    $form['UpdateTeamStatus_Tourney'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Update Eligibility'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+    );
+
+    $form['UpdateTeamStatus_Tourney']['submit']=array(
+        '#type'=>'submit',
+        '#title'=>'Update Eligibility',
+        '#value'=>t('Update Eligibility')
+    );
+
+
+    //load them in form state to pass into the form modal
+    // $form_state['build_info']['args'] = explode('/', request_uri());
+
+
+    return $form;
+
+}
+
+
+function manage_tournaments_form_submit($form, &$form_state){
+
+    $arr = explode('/', request_uri());
+
+    //grab the value of the last section and translate into NID values
+    $tournamentID =  getTournamentNodeIDByChallongeID(getURLSegment(request_uri(), 1));
+
+    //check to insure it's not started already
+    $w = GetWrapperByEntityID($tournamentID);
+
+    //if it is stop and notify user.
+    if($w->field_tournament_status->value()=='Started'){drupal_set_message('Tourney already started.'); return;}
+
+    //Call the Start function
+   if( StartTournament($tournamentID)){
+
+       //indicate we started up successfully
+       drupal_set_message('Tourney has now been started.');
+
+   }else{
+       //indicate we did not start up successfully
+       drupal_set_message('Oh, Snap! Tourney did not seem to start correctly. Contact our CMO for help.');
+   }
+
+    return;
+
+    }
+
+function manage_tournaments_validate_form_submit($form, &$form_state)
+{
+    try {
+        //grab the value of the last section and translate into NID values
+        $tournamentID = getURLSegment(request_uri(), 1);
+
+        //validate state of data for tourney and fix where needed
+        //get and corrections back as array and display them.
+        $arrErrors = StartTournament_Validate($tournamentID);
+        $strMsg = "";
+
+        if (count($arrErrors) > 0) {
+            //write any error messages that come back.
+            for ($x = 0; $x <= count($arrErrors)-1; $x++) {
+                $strMsg.= $arrErrors[$x] . "<br>";
+            }
+            //$strMsg = "Some corrections were needed to Tourney.";
+
+        } else {
+
+            $strMsg = "No corrections were needed to Tourney.";
+        }
+        //display result
+        drupal_set_message($strMsg);
+
+    } catch (Exception $e) {
+        _watchdog_log($e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+    }
+}
+
+function manage_tournaments_complete_tournament_form_submit($form, &$form_state){
+
+    try {
+        //grab the value of the last section and translate into NID values
+        $tournamentID = getURLSegment(request_uri(), 1);
+
+        //validate state of data for tourney and fix where needed
+        //get and corrections back as array and display them.
+        $arrErrors = CompleteTournament($tournamentID);
+
+        if ($arrErrors){
+            //display message on screen
+            drupal_set_message(t('Tournament Winner & Results Locked'));
+
+        } else {
+
+            //display message on screen
+            drupal_set_message(t('PROBLEM: Tournament Winner & Results NOT Locked. Check Logs.'));
+
+        }
+        return true;
+
+    } catch (Exception $e) {
+        _watchdog_log($e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+    }
+    
+}
+
+
+function manage_tournaments_evict_form_submit($form, &$form_state){
+    //deletes teams from tourney who are not currently eligible
+
+    try {
+        //grab the value of the last section and translate into NID values
+        $tournamentID = getURLSegment(request_uri(), 1);
+
+        //validate state of data for tourney and fix where needed
+        //get and corrections back as array and display them.
+        $arrErrors = StartTournament_RemoveIneligible($tournamentID);
+
+        if ($arrErrors){
+            //write any error messages that come back.
+            drupal_set_message('Eligibile Teams Finalized Successfully');
+
+        } else {
+
+            drupal_set_message('Eligibile Teams NOT Finalized Successfully-- check logs.');
+
+        }
+
+        return true;
+
+    } catch (Exception $e) {
+        _watchdog_log($e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+    }
+
+}
+
+function manage_tournaments_updatestatus_form_submit($form, &$form_state){
+    try {
+        //grab the value of the last section and translate into NID values
+        $tournamentID = getURLSegment(request_uri(), 1);
+
+        //validate state of data for tourney and fix where needed
+        //get and corrections back as array and display them.
+        $arrErrors = updateTeamStatus($tournamentID);
+
+        if ($arrErrors){
+            //write any error messages that come back.
+            drupal_set_message('Team Eligibility Updated Successfully');
+
+            return true;
+
+        } else {
+
+            drupal_set_message('Team Eligibility NOT Updated Successfully-- check logs.');
+
+            return false;
+        }
+
+    } catch (Exception $e) {
+        _watchdog_log($e->getMessage() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+    }
+
+
+}
