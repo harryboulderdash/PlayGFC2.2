@@ -20,7 +20,7 @@ function UpdateScoresForm_callback($ajax) {
 
         $form_state = array(
             'ajax' => TRUE,
-            'title' => t('Report Map Results'),
+            'title' => t('Report Match Scores'),
         );
 
         //get url segments
@@ -34,7 +34,7 @@ function UpdateScoresForm_callback($ajax) {
         $output = ctools_modal_form_wrapper('UpdateScoresForm_form', $form_state);
 
         //add additional ajax command to refresh page after submission
-        $form_state['ajax_commands'] = ctools_ajax_command_reload();
+        //$form_state['ajax_commands'] = ctools_ajax_command_reload();
 
         // If the form has been submitted, there may be additional instructions
         // such as dismissing the modal popup.
@@ -238,8 +238,6 @@ function UpdateScoresForm_form($form, &$form_state) {
 //    Winner: Select box
 //    team name games won:
 //    team name 2 games won
-
-    //TODO: Update form placeholders to say 'my team' and 'opponent'
 
     //get url segments count to retrieve tid and mid variables with
     $count = count($form_state['build_info']['args']);

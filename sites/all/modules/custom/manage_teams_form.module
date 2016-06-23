@@ -632,6 +632,30 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
     catch (Exception $e) {
         _watchdog_log($e->getMessage());
     }
+}
 
+/**
+ * Implements hook_form_alter().
+ */
+function manage_teams_form_form_alter(&$form, &$form_state, $form_id)
+{
+    if ($form_id === 'user_profile_form') {
+        //set validator to call check for gamertags
+        $form['#validate'][] = 'manage_teams_form_user_register_form_validate';
+    }
 
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function manage_teams_form_user_register_form_validate($form, &$form_state)
+{
+    if (($form_state['values']['field_xbox_gamertag']['und'][0]['value'] == '') && ($form_state['values']['field_gamertag']['und'][0]['value'] == '')) {
+        //if neither gamertag value is set product an error message
+        form_set_error('field_gamertag', t('A PSN or XBOX gamertag value is required!'));
+        form_set_error('field_xbox_gamertag', t('A PSN or XBOX gamertag value is required!'));
+        array_pop($_SESSION['messages']['error']);
+        //return false;
+    }
 }
