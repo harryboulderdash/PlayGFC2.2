@@ -2221,3 +2221,38 @@ function getURLSegment($uri, $segIndex)
     return $arrURL[count($arrURL) - $segIndex];
 
 }
+
+function renderBracket($uri){
+
+    try{
+
+        //get tournament NODE ID from the url passed in
+        $tournamentID = getURLSegment($uri,1);
+
+        //Load up tournament to check status value
+        $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID ));
+
+        //check if tournament is started before displaying bracket to avoid confusion
+        if(($w->field_tournament_status->value() == "Started") || ($w->field_tournament_status->value() == "Completed")){
+
+            //ssl or not
+            if ( !empty( $_SERVER['HTTPS'] ) ) {
+                $output =  t("<div class='scroll-wrapper'><iframe src='https://challonge.com/") . $tournamentID;
+                $output .= t("/module?theme= 4005' width='100%' height='700' frameborder='0' scrolling='auto' allowtransparency='true'></iframe></div>");
+            }else{
+                $output =  t("<div class='scroll-wrapper'><iframe src='http://challonge.com/") . $tournamentID;
+                $output .= t("/module?theme= 4005' width='100%' height='700' frameborder='0' scrolling='auto' allowtransparency='true'></iframe></div>");
+            }
+        }else{
+            $output =  t("Bracket not available until Tournament Start.");
+        }
+
+        //send back the html needed for bracket
+        return $output;
+
+    }
+    catch (ErrorException $e){
+        _watchdog_log('renderBracket ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+        return false;
+    }
+}
