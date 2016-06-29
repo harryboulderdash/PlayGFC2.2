@@ -49,6 +49,7 @@ URL path settings	            path
 Tournament Status	            field_tournament_status	List
  *
  *
+ *
  * field_tournament_challonge_url
  * if(!getTeamByTournamentByUser($playerUID, $tournamentID))
  */
@@ -96,9 +97,9 @@ $user = $GLOBALS['user'];
         <thead>
           <tr style="background: #27ae60; color: white" >
               <td><strong>Date:</strong> <?php print $fields['field_tournament_time_1']->content; ?></td>
-              <td><strong>Entry:</strong> <?php print $fields['field_tournament_entry_fee']->content; ?></td>
+              <td><strong>Entry:</strong> <?php print $fields['field_tournament_entry_credits']->content; ?></td>
               <td><strong>Max Teams:</strong> <?php print $fields['field_bracket_size']->content; ?></td>
-              <td><strong>Eligible Teams:</strong> need to calculate</td>
+              <td><strong>Eligible Teams:</strong> <?php print $fields['field_field_num_eligible_teams']->content; ?></td>
           </tr>
         </thead>
     </table>
