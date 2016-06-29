@@ -365,11 +365,13 @@ function StartTournament_Validate($tournamentid){
     /*
      * TODO: complete this mess of logic
      * TODO: call the getTeamStatus() function to complete team checks.
-     * 1. Are there > min and < max players on team?
+     * (COMPLETED) 1. Are there > min and < max players on team?
      *  --IF NOT, remove the team from tourney
      *
      * Check for any teams that are not validated
-     * 1. If not 'green' then remove that team from tournament
+     * (COMPLETED)1. If not 'green' then remove that team from tournament
+     *
+     *
      * 2. We won't actually remove the credits until the tournament starts
      * so, need a way to earmark the credits but make it reversible.
      *
