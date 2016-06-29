@@ -346,8 +346,13 @@ function closeRegistrationWhenMaxTeamsReached($tournamentURL){
         if($numTeams >= $w->field_bracket_size->value()){
 
             $w->field_tournament_status->set('Registration Closed');
-            $w->save();
+
         }
+
+        //update number eligible teams
+        $w->field_field_num_eligible_teams->set($numTeams);
+        //save tourney updates
+        $w->save();
 
         return true;
 
