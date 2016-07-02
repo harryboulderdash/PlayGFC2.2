@@ -256,11 +256,8 @@ function manage_teams_form_addPlayer_form($form, &$form_state)
     //set user variable
     $currentUser = $GLOBALS['user'];
 
-    $urlArray = explode('/', request_uri());
-    //get url segments count to retrieve tid and mid variables with
-    $count = count($urlArray);
-    //set variable to tid value
-    $tournamentID = $urlArray[$count - 1];
+    //get tourney ID
+    $tournamentID = getURLSegment(request_uri(),1);
 
     //INSURE THERE IS A TOURNEY ID IN URL
     if (!strlen($tournamentID) > 12) {
@@ -323,9 +320,24 @@ function manage_teams_form_addPlayer_form($form, &$form_state)
         '#type' => 'select',
         '#title' => t('Select a Player Role:'),
         '#options' => getPlayerRoles(),
-//        '#required' => TRUE,
         '#empty_option'=> t('--Choose a Role--'),
     );
+
+    if(isPaidTourney($tournamentID)){
+        //if it's paid, offer choice to PREPAY for each player
+
+        //$active = array(0 => t('Closed'), 1 => t('Active'));
+
+        $form['Add_Players']['Prepay_Player'] = array(
+            '#type' => 'radios',
+            '#title' => t('Pre-Pay this Player with credits from My Own Account?'),
+            '#default_value' => 0,
+            '#options' => array(
+                1 => t('Yes'),
+                0 => t('No '),)
+        );
+
+    }
 
     $form['Add_Players']['submit_button'] = array(
         '#type' => 'submit',
@@ -544,7 +556,7 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
         $tournament_id = getTournamentNodeIDByChallongeID($tournamentID);
     } else {
         //message that tournament is missing
-        drupal_set_message('Tournament is not specified.');
+        form_set_error('Player_Username','Tournament is not specified.');
         return;
     }
 
@@ -574,8 +586,9 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
 
         $teamName = reset(getTeamByTournamentByUser($playerUID, $tournamentID));
 
-        drupal_set_message(t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '),'error');
-        return false;
+
+        form_set_error('Player_Username', t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '));
+        return true;
     }
 
 }
@@ -612,20 +625,24 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
         /*
          * Validate credits and flag them if current user is paying for the player
          * */
-        $prePaid = true; //temp pending logic
+
+        if(isPaidTourney($tournamentID)) {
+            $prePaid = $form_state['values']['Prepay_Player'];
+        }
+        else{
+            $prePaid = true; //temp pending logic
+        }
+        
+
 
         //add player. If Paid tourney, pass in whether being pre-paid or not.
         if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentuser, $prePaid)){
             //display success message
-            //TODO if paid tourney, MESSAGE reflect memeber is INVITED
             drupal_set_message(t($playerUsername . ' Added to Roster'));
         }else{
             //failure message
             drupal_set_message(t('Warning: ' . $playerUsername . ' not added Roster. Try again, and if problem persists contact support via Live Chat.'));
         };
-
-
-
 
         //Run Teams status update for just the team modified
         if(updateSingleTeamStatus($tournamentID,$teamID)){
