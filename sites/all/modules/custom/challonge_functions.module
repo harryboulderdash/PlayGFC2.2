@@ -573,6 +573,35 @@ function StartTournament_RemoveIneligible($tournamentid){
 
 }
 
+function isPaidTourney($tournamentURL){
+    try{
+
+        //Load tourney into wrapper
+        $tid = getTournamentNodeIDByChallongeID($tournamentURL);
+        $w = GetWrapperByEntityID($tid);
+
+        $creditsNeeded = $w->field_tournament_entry_credits->value();
+        //field_tournament_entry_credits
+
+        if($creditsNeeded > 0){
+            //check if credits
+            return true;
+        }
+        else{
+            //if 0 credits is price return false
+            return false;
+
+        }
+
+    }
+    catch(ErrorException $e){
+        _watchdog_log('isPaidTourney ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+        return false;
+    }
+
+
+}
+
 function isTeamNameTaken($tournamentURL, $teamName){
     try{
 
@@ -605,13 +634,16 @@ function isTeamNameTaken($tournamentURL, $teamName){
 
             $result = $query->execute();
 
+
         //Check the COUNT of active Team Members for this team
         if (isset($result['node'])) {
             //IF RESULT HERE THEN NAME IS TAKEN, USER
+         
             return true;
         }
         else{
             //NAME IS UNIQUE, USER CAN TAKE IT
+
             return false;
         }
 
@@ -1720,9 +1752,6 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
 
             //1. create and add team to team node
 
-            //$tournament_id = ? //TODO:get current tourney ID context from variable, or url param
-            //$currentuser = $GLOBALS['user'];
-
             $newTeamNode = new stdClass();
             $newTeamNode->type = 'team';
             $newTeamNode->title = $teamName;
@@ -1750,6 +1779,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
             //add team name
             $wrapper->field_team_name->set($teamName);
             $wrapper->field_team_id->set($teamID);
+            $wrapper->field_team_tournament_id->set($tournamentID);
 
             $wrapper->save();
 
@@ -1758,12 +1788,12 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
             _watchdog_log($e->getMessage());
         }
 
-        //2. add user to team members as Captain
+        //2. add user to team members as Captain by calling AddPlayerToTeam function.
 
         try {
 
             //call function to add current user to newly created team passing in new team ID
-            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1);;
+            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0);
 
             //debug code
             _watchdog_log('createTeamAndAddToTournament: user: ' . $currentUser->uid . ' added as Captain to team ' .$newTeamNode->nid) ;
@@ -1797,7 +1827,6 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
 
         //save it out
         $emwtourney->save();
-
 
         //NOW UPDATE TEAM ELIGIBILITY FOR THIS TEAM ONLY
         updateSingleTeamStatus($emwtourney->field_tournament_challonge_url->value(), $teamNID);
@@ -1853,8 +1882,6 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
         return $teamNID;
 
 
-        //3. Update team eligiblity
-
 //exception handler
     } catch (Exception $e) {
         _watchdog_log($e->getMessage());
@@ -1908,7 +1935,7 @@ function LookupPlayerByAttribute($attributeValue){
     return null;
 }
 
-function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted){
+function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentuser, $prePaid){
     //add player to tournament. When invited set inviteAccepted to 0 until player acknowledges they wish to join.
 
     try {
@@ -1921,11 +1948,14 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted){
         $emw->field_team_reference_from_team_m = $teamID;
         $emw->field_team_member_role = $roleID; //captain taxonomy ID TODO, need to get this dynamically
         $emw->field_team_member_user = $userID;
+        //add new field values
+        $emw->field_team_member_pre_paid = $prePaid;
+        $emw->field_team_member_invited_by = $currentuser;
+
 
         if($inviteAccepted){
             $emw->field_team_member_entry_confirme = $inviteAccepted;
         }
-
 
         //save it out
         $emw->save();
