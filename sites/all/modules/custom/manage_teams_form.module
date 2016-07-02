@@ -569,6 +569,14 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
         //TODO: if yes then trigger an email back to accept and complete registration and tourney entry.
     }
 
+    //make sure player is not already on a team in same tournament
+    if(getTeamByTournamentByUser($playerUID, $tournamentID)) {
+
+        $teamName = reset(getTeamByTournamentByUser($playerUID, $tournamentID));
+
+        drupal_set_message(t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '),'error');
+        return false;
+    }
 
 }
 
@@ -576,6 +584,8 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
 
     try {
 
+        //get current user
+        $currentuser = $GLOBALS['user'];
 
         //use this instead of UID, since it's a different person
         $playerUsername = trim($form_state['values']['Player_Username']);
@@ -590,33 +600,32 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
         //default role to 'Member'
         if(!$roleID){
             $roleID = MEMBER_ROLE; //member taxon id
-
         }
 
         //find user if they exist
         $playerUID = LookupPlayerByAttribute($playerUsername);
 
+        //set invite accepted to 0 until later when player confirms
+        $inviteAccepted = 0;
 
-        //make sure player not already in a team in the same tournament
-        if(!getTeamByTournamentByUser($playerUID, $tournamentID)) {
+        //TODO: LOGIC FOR PAID TOURNEY GOES HERE
+        /*
+         * Validate credits and flag them if current user is paying for the player
+         * */
+        $prePaid = true; //temp pending logic
 
-            //set invite accepted to 0 until later when player confirms
-            $inviteAccepted = 0;
-
-            if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted)){
-                //display success message
-                drupal_set_message(t($playerUsername . ' Added to Roster'));
-            }else{
-                //failure message
-                drupal_set_message(t('Warning: ' . $playerUsername . ' not added Roster. Try again, and if problem persists contact support via Live Chat.'));
-            };
-
+        //add player. If Paid tourney, pass in whether being pre-paid or not.
+        if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentuser, $prePaid)){
+            //display success message
+            //TODO if paid tourney, MESSAGE reflect memeber is INVITED
+            drupal_set_message(t($playerUsername . ' Added to Roster'));
         }else{
-            $teamName = reset(getTeamByTournamentByUser($playerUID, $tournamentID));
+            //failure message
+            drupal_set_message(t('Warning: ' . $playerUsername . ' not added Roster. Try again, and if problem persists contact support via Live Chat.'));
+        };
 
-            drupal_set_message(t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '),'error');
 
-        }
+
 
         //Run Teams status update for just the team modified
         if(updateSingleTeamStatus($tournamentID,$teamID)){
