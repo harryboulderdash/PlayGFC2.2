@@ -1,0 +1,35 @@
+USE `PlayGFC`;
+DROP procedure IF EXISTS `sp_getUserBankBalanceCalculated`;
+
+DELIMITER $$
+USE `PlayGFC`$$
+CREATE DEFINER=`gfc`@`%` PROCEDURE `sp_getUserBankBalanceCalculated`(IN uid integer)
+BEGIN
+
+SELECT
+	SUM(val.field_transaction_value_value) as credit_balance
+FROM
+	PlayGFC.node bl
+JOIN
+	PlayGFC.field_data_field_transaction_value val
+ON
+	bl.vid = val.revision_id
+JOIN
+	PlayGFC.field_data_field_transaction_user usr
+ON
+	bl.vid = usr.revision_id
+JOIN
+	field_data_field_transaction_status trstatus
+ON
+	bl.vid = trstatus.revision_id
+AND
+    usr.field_transaction_user_target_id = uid
+WHERE
+	bl.type = 'user_bank_ledger'
+AND
+	trstatus.field_transaction_status_value != 'Cancelled';
+
+END$$
+
+DELIMITER ;
+
