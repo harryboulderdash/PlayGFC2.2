@@ -31,6 +31,7 @@ define('CAPTAIN_ROLE', '69');
 define('MEMBER_REMOVED_STATUS','112');
 
 
+
 function createGFCTournament($mynodeidparent) {
     include_once DRUPAL_ROOT . '/includes/challonge.class.php';
 
@@ -1935,10 +1936,28 @@ function LookupPlayerByAttribute($attributeValue){
     return null;
 }
 
-function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentuser, $prePaid){
+function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
     //add player to tournament. When invited set inviteAccepted to 0 until player acknowledges they wish to join.
 
     try {
+
+        //if prepaid and is paid tourney, then deduct credits from invitor
+        if($prePaid && $isPaidTourney) {
+            //load up tourney and get credit price
+            $tournamentID = getTournamentNodeIDByChallongeID($tournamentURL);
+            $w = GetWrapperByEntityID($tournamentID);
+            //get price and make negative to reflect debit
+            $price = (($w->field_tournament_entry_credits->value()) * -1);
+
+            //mark credits as RESERVED for the person inviting the player
+            if(!addUserBankLedger($currentUser,$userID,$teamID,$price,t('Credit Used on Tournament'),t('Pre-Paid entry for user ' . $userID) ,$tournamentID,t('Reserved'))){
+                // if fails return false
+                return false;
+
+            }
+
+        }
+
 
         //create team members entity and wrap it
         $entity = entity_create('team_members', array('type' => 'team_members'));
@@ -1950,7 +1969,7 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentuse
         $emw->field_team_member_user = $userID;
         //add new field values
         $emw->field_team_member_pre_paid = $prePaid;
-        $emw->field_team_member_invited_by = $currentuser;
+        $emw->field_team_member_invited_by = $currentUser;
 
 
         if($inviteAccepted){
@@ -1963,8 +1982,9 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentuse
         return true;
 
         //exception handler
-    } catch (Exception $e) {
-        _watchdog_log($e->getMessage());
+    } catch (ErrorException $e){
+        _watchdog_log('AddPlayerToTeam ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+        return false;
     }
 
 
@@ -2170,25 +2190,7 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
     return $output;
 }
 
-    function addUserBankLedger($title='User Bank Ledger Add', $customer_uid, $credit_value, $type_transaction,$notes, $tournament_id = null){
-        //set field values
-        /*
-         * field_transaction_user
-         *field_transaction_type
-         * field_transaction_value
-         * field_tournament_id
-         * field_transaction_notes
-         *
-         *
-         *  Credit Added From Purchase
-            Credit Used on Tournament
-            Credit Added From GFC Prize
-         *
-         *
-         *
-         * */
-
-
+    function addUserBankLedger($customer_uid, $player_uid, $player_team, $credit_value, $type_transaction,$notes, $tournament_id = null, $status){
 
         try{
 
@@ -2206,22 +2208,27 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
             $emw = entity_metadata_wrapper('node', $userBank);
 
 
-
-            $emw->title->set($title);
+            //set all the field values
+            $emw->title->set('User Bank Ledger Add');
             $emw->field_transaction_date->set(time());
             $emw->field_transaction_user->set($customer_uid);
             $emw->field_transaction_type->set($type_transaction);
             $emw->field_transaction_value->set($credit_value);
             $emw->field_tournament_id->set($tournament_id);
             $emw->field_transaction_notes->set($notes);
+            $emw->field_transaction_status->set($status);
+            $emw->field_transaction_player_user->set($player_uid);
+            $emw->field_transaction_player_team->set($player_team);
+
+
 
             //save the match updates
             $emw->save();
 
         }
-        catch (EntityMetadataWrapperException $exc) {
-            _watchdog_log($exc->getMessage(),$exc);
-
+        catch (ErrorException $e)
+        {
+            _watchdog_log('addUserBankLedger ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
             return false;
 
         }
