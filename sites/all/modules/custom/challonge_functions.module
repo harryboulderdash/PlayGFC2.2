@@ -2033,12 +2033,8 @@ function RemovePlayerFromTeam($entityID){
             //if paid tourney and credits are reserved, set them to cancelled.
             if ($emw->field_team_member_transaction->getIdentifier()) {
 
-                drupal_set_message('Before: ' . $emw->field_team_member_transaction->field_transaction_status->value());
-
                 $emw->field_team_member_transaction->field_transaction_status->set('Cancelled');
                 $emw->field_team_member_transaction->save();
-
-                drupal_set_message('After: ' . $emw->field_team_member_transaction->field_transaction_status->value());
             }
         }
         catch (EntityMetadataWrapperException $exc) {
