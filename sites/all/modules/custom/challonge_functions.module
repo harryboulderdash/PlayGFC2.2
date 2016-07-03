@@ -23,6 +23,15 @@ function _watchdog_log($error, $object = NULL, $backtrace = FALSE, $msg_type = W
     drupal_set_message($err_msg, 'error');
 
     WATCHDOG_DEBUG
+
+    TODO: look at this example to improve this thing
+    catch (EntityMetadataWrapperException $exc) {
+            watchdog(
+                'MODULE_NAME',
+                'EntityMetadataWrapper exception in %function() @trace',
+                array('%function' => __FUNCTION__, '@trace' => $exc->getTraceAsString()),
+                WATCHDOG_ERROR
+            );
     */
 }
 
@@ -1957,8 +1966,6 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
 
             }
 
-            //debug only
-            drupal_set_message('Transaction NID is ' . $transaction_id);
         }
 
 
@@ -1973,12 +1980,14 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
         //add new field values
         $emw->field_team_member_pre_paid = $prePaid;
         $emw->field_team_member_invited_by = $currentUser;
-        $emw->field_team_member_transaction = $transaction_id;
 
+        //if player is PREPAID
+        //add transaction id
+        if($prePaid){
+            $emw->field_team_member_transaction = $transaction_id;
+        }
 
-        //field_team_member_transaction
-
-
+        //if invite accepted set that
         if($inviteAccepted){
             $emw->field_team_member_entry_confirme = $inviteAccepted;
         }
@@ -2013,14 +2022,34 @@ function RemovePlayerFromTeam($entityID){
 
 
     try {
-
+        //SET PLAYER STATUS AS REMOVED
         $emw = entity_metadata_wrapper('team_members', $entityID);
         $emw->field_team_member_status = MEMBER_REMOVED_STATUS;
         $emw->save();
 
 
-        //code to actually delete member
-        //entity_delete('team_members', $entityID);
+        //IF THERE IS AN ASSOCIATED TRANSACTION, SET IT TO CANCELLED
+        try {
+            //if paid tourney and credits are reserved, set them to cancelled.
+            if ($emw->field_team_member_transaction->getIdentifier()) {
+
+                drupal_set_message('Before: ' . $emw->field_team_member_transaction->field_transaction_status->value());
+
+                $emw->field_team_member_transaction->field_transaction_status->set('Cancelled');
+                $emw->field_team_member_transaction->save();
+
+                drupal_set_message('After: ' . $emw->field_team_member_transaction->field_transaction_status->value());
+            }
+        }
+        catch (EntityMetadataWrapperException $exc) {
+            watchdog(
+                'Challonge_Functions',
+                'EntityMetadataWrapper exception in %function() @trace',
+                array('%function' => __FUNCTION__, '@trace' => $exc->getTraceAsString()),
+                WATCHDOG_ERROR
+            );
+        }
+
 
         //exception handler
     } catch (Exception $e) {
