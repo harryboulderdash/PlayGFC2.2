@@ -1950,12 +1950,15 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
             $price = (($w->field_tournament_entry_credits->value()) * -1);
 
             //mark credits as RESERVED for the person inviting the player
-            if(!addUserBankLedger($currentUser,$userID,$teamID,$price,t('Credit Used on Tournament'),t('Pre-Paid entry for user ' . $userID) ,$tournamentID,t('Reserved'))){
+            $transaction_id = addUserBankLedger($currentUser,$userID,$teamID,$price,t('Credit Used on Tournament'),t('Pre-Paid entry for user ' . $userID) ,$tournamentID,t('Reserved'));
+            if(!$transaction_id){
                 // if fails return false
                 return false;
 
             }
 
+            //debug only
+            drupal_set_message('Transaction NID is ' . $transaction_id);
         }
 
 
@@ -1970,6 +1973,10 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
         //add new field values
         $emw->field_team_member_pre_paid = $prePaid;
         $emw->field_team_member_invited_by = $currentUser;
+        $emw->field_team_member_transaction = $transaction_id;
+
+
+        //field_team_member_transaction
 
 
         if($inviteAccepted){
@@ -2233,7 +2240,7 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
 
         }
 
-        return true;
+        return $emw->nid->value();
     }
 
 function getBankBalanceByUser($user_id){
