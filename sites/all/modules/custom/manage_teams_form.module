@@ -550,6 +550,8 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
     //set variable to tid value
     $tournamentID = getURLSegment(request_uri(),1);
 
+    $currentUser = $GLOBALS['user'];
+
     //insure there is a tournament context in url
     if (strlen($tournamentID) > 12) { //insure the tid is the right element based on length
         //translate tid into NID
@@ -591,6 +593,30 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
         return true;
     }
 
+    //If PAID tourney AND trying to pre-pay, make sure inviter has enough tokens
+    /*
+     * lookup needed tokens
+     * lookup existing tokens
+     * compare and set message if not adequate
+     *
+     * */
+
+    //load up tourney info
+    $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    //set needed credits
+    $price = $w->field_tournament_entry_credits->value();
+    //set availablie credits
+    $availableCredits = getBankBalanceByUser($currentUser->uid);
+    //if not adequate credits set message.
+    if($availableCredits < $price){
+        //inform inviter that credits are not adequate
+        $message = t('Warning: not enough credits in your account to pre-pay for ' . $playerUsername . '. ');
+        $message += t('Either purchase more credits here: ' . l('Shop','/Shop') .  ' , or select option below for player to pay their own credits (no pre-pay) and re-submit.');
+
+        form_set_error('Player_Username', $message);
+        return true;
+    }
+
 }
 
 function manage_teams_form_addPlayer_form_submit($form, &$form_state){
@@ -598,7 +624,7 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
     try {
 
         //get current user
-        $currentuser = $GLOBALS['user'];
+        $currentUser = $GLOBALS['user'];
 
         //use this instead of UID, since it's a different person
         $playerUsername = trim($form_state['values']['Player_Username']);
@@ -625,18 +651,18 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
         /*
          * Validate credits and flag them if current user is paying for the player
          * */
-
         if(isPaidTourney($tournamentID)) {
             $prePaid = $form_state['values']['Prepay_Player'];
+            $isPaidTourney = true;
         }
         else{
             $prePaid = true; //temp pending logic
+            $isPaidTourney = false;
         }
-        
 
 
         //add player. If Paid tourney, pass in whether being pre-paid or not.
-        if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentuser, $prePaid)){
+        if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentUser->uid, $prePaid,$isPaidTourney,$tournamentID)){
             //display success message
             drupal_set_message(t($playerUsername . ' Added to Roster'));
         }else{
