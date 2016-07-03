@@ -2008,19 +2008,6 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
 
 function RemovePlayerFromTeam($entityID){
 
-    /*
-     *
-     *
-     * Remove a player from the team
-     * If the player happens to have accepted invite...
-     * that's okay because when tournament starts
-     * only those in the team (having status ACTIVE) at the MOMENT it starts will have their credits removed permanently
-     *
-     * I mean, that is, someday when we implement that feature...
-     *
-     * */
-
-
     try {
         //SET PLAYER STATUS AS REMOVED
         $emw = entity_metadata_wrapper('team_members', $entityID);
@@ -2034,6 +2021,10 @@ function RemovePlayerFromTeam($entityID){
             if ($emw->field_team_member_transaction->getIdentifier()) {
 
                 $emw->field_team_member_transaction->field_transaction_status->set('Cancelled');
+                $emw->field_team_member_transaction->field_transaction_notes->set('Player removed from team, and spent credits returned (cancelled). ');
+
+
+                //field_transaction_notes
                 $emw->field_team_member_transaction->save();
             }
         }
@@ -2045,7 +2036,6 @@ function RemovePlayerFromTeam($entityID){
                 WATCHDOG_ERROR
             );
         }
-
 
         //exception handler
     } catch (Exception $e) {
