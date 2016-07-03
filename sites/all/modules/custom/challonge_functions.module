@@ -1739,19 +1739,8 @@ function getChallongeMatchIDByNodeID($matchNID){
  * @param $currentUser
  */
 function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $createTeam){
+
     include_once DRUPAL_ROOT . '/includes/challonge.class.php';
-
-
-    /*
-     * TODO: NOTE, sometimes the team is NOT added to the tournament teams successfully
-     * So, needt to harden this to insure this is the case.
-     * TODO: Need to AUDIT Challonge teams against Tourney Teams for EXACT MATCH
-     *
-     *
-     * */
-
-    //debug logging
-    _watchdog_log('createTeamAndAddToTournament:', 'tid: '. $tournamentID . 'team name: ' .  $teamName . 'current uid' . $currentUser->uid . 'create team' .  $createTeam);
 
     //instantiate challonge API
     $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
@@ -1802,18 +1791,18 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
 
         try {
 
+            //get challonge url from node id
+            $tournamentURL = getChallongeTournamentIDByNodeID($tournamentID);
+            //check if paid tourney
+            $isPaidTourney = isPaidTourney($tournamentURL);
+
             //call function to add current user to newly created team passing in new team ID
-            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0);
-
-            //debug code
-            _watchdog_log('createTeamAndAddToTournament: user: ' . $currentUser->uid . ' added as Captain to team ' .$newTeamNode->nid) ;
-
+            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0,$isPaidTourney,$tournamentURL);ß
 
             //exception handler
         } catch (Exception $e) {
             _watchdog_log($e->getMessage(),$e);
         }
-
 
     }
 
@@ -1892,14 +1881,9 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
         return $teamNID;
 
 
-//exception handler
     } catch (Exception $e) {
         _watchdog_log($e->getMessage());
     }
-
-
-
-    //        return $newTeamNode->nid;
 
 }
 function LookupPlayerByAttribute($attributeValue){
@@ -1943,6 +1927,38 @@ function LookupPlayerByAttribute($attributeValue){
 
     //If NOTHING works then return 0
     return null;
+}
+
+function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
+    try{
+
+        //update team_member status to accepted
+        //if prepaid, then works is done!
+        //if NOT prepaid, then validate enough credits and send shopping if needed
+        //then reserve credits in bank_ledger
+        //that's all folks!!
+
+        $isPaidTourney = isPaidTourney($tournamentURL);
+
+        //SET PLAYER CONFIRMED AS YES
+        $emw = entity_metadata_wrapper('team_members', $teamMemberID);
+        $emw->field_team_member_entry_confirme = 1;
+        $emw->save();
+
+        if (($isPaidTourney) && (!$emw->field_team_member_pre_paid->value())){
+
+          //Player will now need to make payment
+        }
+
+      }
+
+    catch (ErrorException $e){
+        _watchdog_log('AddPlayerToTeam ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+        return false;
+    }
+
+
+
 }
 
 function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
