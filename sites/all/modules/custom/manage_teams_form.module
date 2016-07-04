@@ -467,11 +467,33 @@ function manage_teams_form_form_validate($form, &$form_state) {
     }
 
     //prevent duplicate team names in same tourney
-  if(isTeamNameTaken($tournamentID, $teamValue)){
+    if(isTeamNameTaken($tournamentID, $teamValue)){
         //advise user to choose another team name or a new variant
         form_set_error('team_name',t('The team name ' . $teamValue . ' is taken in this tournament. Try again with a different or altered team name.'));
         return true;
     }
+
+        //
+        //get user
+        $currentUser = $GLOBALS['user'];
+        $playerValue = getUserByUserID($currentUser->uid)->name;
+
+        //load up tourney info
+        $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+        //set needed credits
+        $price = $w->field_tournament_entry_credits->value();
+        //set availablie credits
+        $availableCredits = getBankBalanceByUser($currentUser->uid);
+        //if not adequate credits set message.
+        if($availableCredits < $price){
+            //inform inviter that credits are not adequate
+            $message = t('Warning: not enough credits in your account to pre-pay for ' . $playerValue . '. ');
+            $message += t('Either purchase more credits here: ' . l('Shop','/Shop') .  ' , or select option below for player to pay their own credits (no pre-pay) and re-submit.');
+
+            form_set_error('team_name', $message);
+            return true;
+        }
+        //
 
     }
     catch (EntityMetadataWrapperException $exc) {
@@ -576,7 +598,7 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
         //TODO: message that TID is missing
         //drupal_set_message('This player not yet registered with GFC, would you like to invite them?');
         //drupal_set_message('This player not yet registered with GFC, once registered you can add to team.');
-        form_set_error('Player_Username','This player ' . $playerUsername . ' : ' .$playerUID . ' not yet registered with GFC, once registered you can add to team.');
+        form_set_error('Player_Username','This player ' . $playerValue . ' : ' .$playerUID . ' not yet registered with GFC, once registered you can add to team.');
 
         return false;
 
@@ -589,7 +611,7 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
         $teamName = reset(getTeamByTournamentByUser($playerUID, $tournamentID));
 
 
-        form_set_error('Player_Username', t('Warning: ' . $playerUsername . ' is already registered in this Tournament on team ' . $teamName .'. '));
+        form_set_error('Player_Username', t('Warning: ' . $playerValue . ' is already registered in this Tournament on team ' . $teamName .'. '));
         return true;
     }
 
@@ -610,7 +632,7 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
     //if not adequate credits set message.
     if($availableCredits < $price){
         //inform inviter that credits are not adequate
-        $message = t('Warning: not enough credits in your account to pre-pay for ' . $playerUsername . '. ');
+        $message = t('Warning: not enough credits in your account to pre-pay for ' . $playerValue . '. ');
         $message += t('Either purchase more credits here: ' . l('Shop','/Shop') .  ' , or select option below for player to pay their own credits (no pre-pay) and re-submit.');
 
         form_set_error('Player_Username', $message);
