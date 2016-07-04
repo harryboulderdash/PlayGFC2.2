@@ -1728,6 +1728,12 @@ function getChallongeTournamentIDByNodeID($tournamentNID){
     return GetWrapperByEntityID($tournamentNID)->field_tournament_challonge_id->value();
 }
 
+function getChallongeTournamentURLByNodeID($tournamentNID){
+    //get challonge tourney URL from NID
+    return GetWrapperByEntityID($tournamentNID)->field_tournament_challonge_url->value();
+}
+
+
 function getChallongeMatchIDByNodeID($matchNID){
 
     //get challonge tourney ID from NID
@@ -1793,7 +1799,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
         try {
 
             //get challonge url from node id
-            $tournamentURL = getChallongeTournamentIDByNodeID($tournamentID);
+            $tournamentURL = getChallongeTournamentURLByNodeID($tournamentID);
 
             //check if paid tourney
             $isPaidTourney = isPaidTourney($tournamentURL);
