@@ -38,6 +38,10 @@ function _watchdog_log($error, $object = NULL, $backtrace = FALSE, $msg_type = W
 //CONSTANTS
 define('CAPTAIN_ROLE', '69');
 define('MEMBER_REMOVED_STATUS','112');
+define('MEMBER_ELIGIBLE_STATUS','114');
+define('MEMBER_INVITED_STATUS','117');
+
+
 
 
 function createGFCTournament($mynodeidparent) {
@@ -1802,6 +1806,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
         }
 
         //2. add user to team members as Captain by calling AddPlayerToTeam function.
+        //***************************************************************************
 
         try {
 
@@ -1980,6 +1985,14 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
             }
 
         }
+        //
+
+        //add transaction ID to Player and set to ELIGIBLE
+        $emw->field_team_member_transaction = $transaction_id;
+        $emw->field_team_member_eligibility = 'Eligible';
+        $emw->save();
+
+        //
 
       }
 
@@ -1998,14 +2011,14 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
     try {
 
         //if prepaid and is paid tourney, then deduct credits from invitor
-        if(($prePaid || $userID = $currentUser) && $isPaidTourney) {
+        if(($prePaid || $userID == $currentUser) && $isPaidTourney) {
             //load up tourney and get credit price
             $tournamentID = getTournamentNodeIDByChallongeID($tournamentURL);
             $w = GetWrapperByEntityID($tournamentID);
             //get price and make negative to reflect debit
             $price = (($w->field_tournament_entry_credits->value()) * -1);
 
-            if($userID=$currentUser){
+            if($userID==$currentUser){
                 //user paying for self
                 $msg = t('Paid entry for user ' . getUserByUserID($userID)->name);
             }else{
@@ -2041,6 +2054,22 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
         //add transaction id
         if(($prePaid || $userID = $currentUser) && $isPaidTourney) {
             $emw->field_team_member_transaction = $transaction_id;
+        }
+
+        //player is also inviter
+        if($userID == $currentUser){
+            //User is adding self so auto accept invite
+            //AND they are now paid if needed
+            //so set Player eligibility to 'Eligible'
+            $emw->field_team_member_eligibility = MEMBER_ELIGIBLE_STATUS;
+            $emw->field_team_member_entry_confirme->set(1);
+        }
+
+        else{
+            //User is inviting player
+            //Set player eligibility to Invite not Accepted
+            $emw->field_team_member_eligibility = MEMBER_INVITED_STATUS;
+
         }
 
         //if invite accepted set that
