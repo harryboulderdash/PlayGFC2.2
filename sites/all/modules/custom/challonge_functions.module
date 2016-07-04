@@ -40,7 +40,6 @@ define('CAPTAIN_ROLE', '69');
 define('MEMBER_REMOVED_STATUS','112');
 
 
-
 function createGFCTournament($mynodeidparent) {
     include_once DRUPAL_ROOT . '/includes/challonge.class.php';
 
@@ -1533,6 +1532,8 @@ function getTeamNodeIDbyChallongeID($teamChallongeID){
             $teamNID =  $node->nid;
         }
     }
+
+    return $teamNID;
 }
 
 function getExistingTeamsByUser($currentUser,$tournament_url=null){
@@ -1793,11 +1794,12 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
 
             //get challonge url from node id
             $tournamentURL = getChallongeTournamentIDByNodeID($tournamentID);
+
             //check if paid tourney
             $isPaidTourney = isPaidTourney($tournamentURL);
 
             //call function to add current user to newly created team passing in new team ID
-            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0,$isPaidTourney,$tournamentURL);ß
+            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0,$isPaidTourney,$tournamentURL);
 
             //exception handler
         } catch (Exception $e) {
@@ -1942,12 +1944,28 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
         //SET PLAYER CONFIRMED AS YES
         $emw = entity_metadata_wrapper('team_members', $teamMemberID);
-        $emw->field_team_member_entry_confirme = 1;
+        $emw->field_team_member_entry_confirme->set(1);
         $emw->save();
 
+        //Player will now need to make payment
         if (($isPaidTourney) && (!$emw->field_team_member_pre_paid->value())){
 
-          //Player will now need to make payment
+            $teamID = $emw->field_team_reference_from_team_m->value();
+
+            //load up tourney and get credit price
+            $tournamentID = getTournamentNodeIDByChallongeID($tournamentURL);
+            $w = GetWrapperByEntityID($tournamentID);
+            //get price and make negative to reflect debit
+            $price = (($w->field_tournament_entry_credits->value()) * -1);
+
+            //mark credits as RESERVED for the person inviting the player
+            $transaction_id = addUserBankLedger($userID,$userID,$teamID,$price,t('Credit Used on Tournament'),t('Self-paid entry for user ' . $userID) ,$tournamentID,t('Reserved'));
+            if(!$transaction_id){
+                // if fails return false
+                return false;
+
+            }
+
         }
 
       }
