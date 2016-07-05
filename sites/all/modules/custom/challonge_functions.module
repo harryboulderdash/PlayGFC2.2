@@ -147,7 +147,7 @@ function updateTeamStatus($tournamentURL){
         $arr_tid = array('112');
 
         //create object for tournament
-        $tourneywrapper = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
+        $tourneywrapper = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
 
         //set max and min team members
         $maxPlayers = $tourneywrapper->field_maximum_team_size->value();
@@ -165,7 +165,7 @@ function updateTeamStatus($tournamentURL){
             //load active team members
             $query->entityCondition('entity_type', 'team_members')
                 ->entityCondition('bundle', 'team_members')
-                //->fieldCondition('field_team_member_user', 'target_id', $currentUserID, '=')
+                ->fieldCondition('field_team_member_eligibility', 'tid', MEMBER_ELIGIBLE_STATUS)
                 ->fieldCondition('field_team_reference_from_team_m', 'target_id', $teamNID, '=')
                 ->fieldCondition('field_team_member_status', 'tid', $arr_tid, 'NOT IN')
 
@@ -252,12 +252,12 @@ function updateSingleTeamStatus($tournamentURL,$teamNID){
         $arr_tid = array(MEMBER_REMOVED_STATUS);
 
         //create object for tournament
-        $tourneywrapper = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
-        $teamwrapper = GetWrapperByEntityID($teamNID);
+        $tourneyWrapper = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
+        $teamWrapper = getWrapperByEntityID($teamNID);
 
         //set max and min team members
-        $maxPlayers = $tourneywrapper->field_maximum_team_size->value();
-        $minPlayers = $tourneywrapper->field_minimum_team_size->value();
+        $maxPlayers = $tourneyWrapper->field_maximum_team_size->value();
+        $minPlayers = $tourneyWrapper->field_minimum_team_size->value();
 
         //Check info on a single team based on ID passed in
 
@@ -268,7 +268,7 @@ function updateSingleTeamStatus($tournamentURL,$teamNID){
             //load active team members
             $query->entityCondition('entity_type', 'team_members')
                 ->entityCondition('bundle', 'team_members')
-                //->fieldCondition('field_team_member_user', 'target_id', $currentUserID, '=')
+                ->fieldCondition('field_team_member_eligibility', 'tid', MEMBER_ELIGIBLE_STATUS)
                 ->fieldCondition('field_team_reference_from_team_m', 'target_id', $teamNID, '=')
                 ->fieldCondition('field_team_member_status', 'tid', $arr_tid, 'NOT IN')
 
@@ -289,22 +289,22 @@ function updateSingleTeamStatus($tournamentURL,$teamNID){
             //SET ELIGIBILITY VALUE ON TEAM
             if($numMembers < $minPlayers){
                 //set eligibility value on TEAM
-                $teamwrapper->field_eligibility->set("Awaiting Team Members");
+                $teamWrapper->field_eligibility->set("Awaiting Team Members");
             }elseif($numMembers > $maxPlayers){
                 //set eligibility value on TEAM
-                $teamwrapper->field_eligibility->set("Too Many Team Members");
+                $teamWrapper->field_eligibility->set("Too Many Team Members");
             }else{
                 //set eligibility value on TEAM
-                $teamwrapper->field_eligibility->set("Eligible");
+                $teamWrapper->field_eligibility->set("Eligible");
             }
 
             //save out results
-            $teamwrapper->save();
+            $teamWrapper->save();
 
             //CLEAN UP
             unset($result);
-            unset($teamwrapper);
-            unset($tourneywrapper);
+            unset($teamWrapper);
+            unset($tourneyWrapper);
 
 
         //call registration closed in case we've now hit our max teams
@@ -327,7 +327,7 @@ function closeRegistrationWhenMaxTeamsReached($tournamentURL){
     try{
 
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
-        $w = GetWrapperByEntityID($tid);
+        $w = getWrapperByEntityID($tid);
         foreach($w->field_tournament_teams_entered->value() as $team){
 
             $arrTeams[] = $team->nid;
@@ -418,7 +418,7 @@ function StartTournament_Validate($tournamentid){
 
         //load up GFC tourney data
         $tourneyNID = getTournamentNodeIDByChallongeID($tournamentid);
-        $tourneywrapper = GetWrapperByEntityID($tourneyNID);
+        $tourneywrapper = getWrapperByEntityID($tourneyNID);
         $challongeid = $tourneywrapper->field_tournament_challonge_id->value();
 
         //* 2. load challonge teams
@@ -451,7 +451,7 @@ function StartTournament_Validate($tournamentid){
                 //get team NID
                 $missingNID = getTeamNodeIDbyChallongeID($team->{'misc'});
                 //wrap team
-                $wTeam = GetWrapperByEntityID($missingNID);
+                $wTeam = getWrapperByEntityID($missingNID);
                 //set challonge based ID value in GFC Team entity
                 $wTeam->field_team_challonge_id->set((integer)$team->{'id'});
                 //save it out
@@ -471,7 +471,7 @@ function StartTournament_Validate($tournamentid){
                 $tourneywrapper->save();
 
                 //update team with Challonge based ID
-                $wTeam = GetWrapperByEntityID($missingNID);
+                $wTeam = getWrapperByEntityID($missingNID);
                 $wTeam->field_team_challonge_id->set((integer)$team->{'id'});
                 //save it out
                 $wTeam->save();
@@ -513,7 +513,7 @@ function StartTournament_RemoveIneligible($tournamentid){
         $update = updateParticipantsFromChallonge($tid);
 
 
-        $w = GetWrapperByEntityID($tid);
+        $w = getWrapperByEntityID($tid);
         foreach($w->field_tournament_teams_entered->value() as $team){
             //make sure there is a nid first just in case
             if($team->nid) {
@@ -552,7 +552,7 @@ function StartTournament_RemoveIneligible($tournamentid){
             foreach ($nids as $nid) {
 
                 //load team wrapper
-                $w = GetWrapperByEntityID($nid);
+                $w = getWrapperByEntityID($nid);
 
                 //REMOVE FROM CHALLONGE BUT LOG IF NO ID EXISTS ON TEAM DUE TO PRIOR FAILURE
                 if($w->field_team_challonge_id->value() != ''){
@@ -591,7 +591,7 @@ function isPaidTourney($tournamentURL){
 
         //Load tourney into wrapper
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
-        $w = GetWrapperByEntityID($tid);
+        $w = getWrapperByEntityID($tid);
 
         $creditsNeeded = $w->field_tournament_entry_credits->value();
         //field_tournament_entry_credits
@@ -621,7 +621,7 @@ function isTeamNameTaken($tournamentURL, $teamName){
         //**************STEP 1 LOAD TOURNEY NODE*****************
 
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
-        $w = GetWrapperByEntityID($tid);
+        $w = getWrapperByEntityID($tid);
         $arrTeams = array();
         foreach($w->field_tournament_teams_entered->value() as $team){
 
@@ -670,7 +670,7 @@ function isTeamNameTaken($tournamentURL, $teamName){
     
 }
 
-function CompleteTournament($tournamentURL){
+function completeTournament($tournamentURL){
     try{
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
 
@@ -679,7 +679,7 @@ function CompleteTournament($tournamentURL){
 
         //update tourney status in GFC
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
-        $w = GetWrapperByEntityID($tid);
+        $w = getWrapperByEntityID($tid);
 
         $w->field_tournament_status->set('Completed');
         $w->save();
@@ -721,7 +721,7 @@ function StartTournament($tournamentid){
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
 
         //load up GFC tourney data
-        $tourneywrapper = GetWrapperByEntityID($tournamentid);
+        $tourneywrapper = getWrapperByEntityID($tournamentid);
         //$node = node_load($tournamentid);
         //$tourneywrapper = entity_metadata_wrapper('node',$node);
 
@@ -934,7 +934,7 @@ function updateParticipantsFromChallonge($tournamentNID){
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
 
         //get tourney wrapper
-        $tw = GetWrapperByEntityID($tournamentNID);
+        $tw = getWrapperByEntityID($tournamentNID);
         //Load all participants from Challonge
 
         //return $tw;
@@ -1002,7 +1002,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
         $start = microtime(true);
 
         //load up tourney data
-        $wrapper_t = GetWrapperByEntityID($tournament_id);
+        $wrapper_t = getWrapperByEntityID($tournament_id);
 
         //get API tourney ID for remote calls
         $challongeid = $wrapper_t->field_tournament_challonge_id->value();
@@ -1049,7 +1049,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
                 if (isset($result3['node'])) {
                     $nodes3 = entity_load('node', array_keys($result3['node']));
                     foreach ($nodes3 as $node3) {
-                        $emw = GetWrapperByEntityID($node3->nid);
+                        $emw = getWrapperByEntityID($node3->nid);
                     }
                     unset($nodes3);
                 }
@@ -1404,7 +1404,7 @@ function UpdateMatchResult($tournament_id, $match_id, $team_1_score, $team_2_sco
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
 
         //Load and update match team scores
-        $w_match = GetWrapperByEntityID($match_id);
+        $w_match = getWrapperByEntityID($match_id);
 
         //decide winner based on highest score
         //assumes no tie is possible
@@ -1435,7 +1435,7 @@ function UpdateMatchResult($tournament_id, $match_id, $team_1_score, $team_2_sco
 
         //Get Challonge IDs for external updates
         $challongeid_m =  $w_match->field_match_challonge_id->value();
-        $challongeid = GetWrapperByEntityID($tournament_id)->field_tournament_challonge_id->value();
+        $challongeid = getWrapperByEntityID($tournament_id)->field_tournament_challonge_id->value();
 
         //prep param values for Challonge
         $scores =  $team_1_score . "-" . $team_2_score;
@@ -1462,7 +1462,7 @@ function UpdateMatchResult($tournament_id, $match_id, $team_1_score, $team_2_sco
 
 }
 
-function GetWrapperByEntityID($nid){
+function getWrapperByEntityID($nid){
 
     //make updates to GFC data first
     //$node = node_load($nid);
@@ -1577,7 +1577,7 @@ function getExistingTeamsByUser($currentUser,$tournament_url=null){
         //dpm($teams);
         foreach ($teams as $team) {
             //dpm($team);
-            $userTeams[$team->field_team_reference_from_team_m['und'][0]['target_id']] =  GetWrapperByEntityID($team->field_team_reference_from_team_m['und'][0]['target_id'])->field_team_name->value();
+            $userTeams[$team->field_team_reference_from_team_m['und'][0]['target_id']] =  getWrapperByEntityID($team->field_team_reference_from_team_m['und'][0]['target_id'])->field_team_name->value();
         }
     }
 
@@ -1594,7 +1594,7 @@ function getTeamByTournamentByUser($currentUserUID, $tournamentURL){
         $arr_tid = array('112');
 
         //create object for tournament
-        $tourneywrapper = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
+        $tourneywrapper = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
 
         //create array variable, maybe not needed but avoiding an error I saw
         $arrTeams = array();
@@ -1643,7 +1643,7 @@ function getTeamByTournamentByUser($currentUserUID, $tournamentURL){
 
                 if($teamMember->field_team_member_user['und'][0]['target_id'] = $currentUserID) {
                     //dpm($team);
-                    $userTeams[$teamMember->field_team_reference_from_team_m['und'][0]['target_id']] = GetWrapperByEntityID($teamMember->field_team_reference_from_team_m['und'][0]['target_id'])->field_team_name->value();
+                    $userTeams[$teamMember->field_team_reference_from_team_m['und'][0]['target_id']] = getWrapperByEntityID($teamMember->field_team_reference_from_team_m['und'][0]['target_id'])->field_team_name->value();
 
                 }
             }
@@ -1736,19 +1736,19 @@ function getMapsByTitleAndMode($gameTitle, $gameMode){
 
 function getChallongeTournamentIDByNodeID($tournamentNID){
     //get challonge tourney ID from NID
-    return GetWrapperByEntityID($tournamentNID)->field_tournament_challonge_id->value();
+    return getWrapperByEntityID($tournamentNID)->field_tournament_challonge_id->value();
 }
 
 function getChallongeTournamentURLByNodeID($tournamentNID){
     //get challonge tourney URL from NID
-    return GetWrapperByEntityID($tournamentNID)->field_tournament_challonge_url->value();
+    return getWrapperByEntityID($tournamentNID)->field_tournament_challonge_url->value();
 }
 
 
 function getChallongeMatchIDByNodeID($matchNID){
 
     //get challonge tourney ID from NID
-    return GetWrapperByEntityID($matchNID)->field_match_challonge_id->value();
+    return getWrapperByEntityID($matchNID)->field_match_challonge_id->value();
 }
 
 /**
@@ -1785,7 +1785,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
             //print $newTeamNode->nid;
             //
             //wrap it
-            $wrapper = GetWrapperByEntityID($newTeamNode->nid);//entity_metadata_wrapper('node', $newTeamNode);
+            $wrapper = getWrapperByEntityID($newTeamNode->nid);//entity_metadata_wrapper('node', $newTeamNode);
 
             // USE TO ADD ENTITY REFERENCE BY NODE ID
             $wrapper->field_team_captain = $currentUser->uid;
@@ -1817,7 +1817,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
             $isPaidTourney = isPaidTourney($tournamentURL);
 
             //call function to add current user to newly created team passing in new team ID
-            AddPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0,$isPaidTourney,$tournamentURL);
+            addPlayerToTeam($newTeamNode->nid, $currentUser->uid, CAPTAIN_ROLE, 1, $currentUser->uid, 0,$isPaidTourney,$tournamentURL);
 
             //exception handler
         } catch (Exception $e) {
@@ -1841,7 +1841,7 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
 
     try {
         //$tourneynode = node_load($tournamentID); //depends on tourney id being available
-        $emwtourney = GetWrapperByEntityID($tournamentID);   //entity_metadata_wrapper('node',$tourneynode);
+        $emwtourney = getWrapperByEntityID($tournamentID);   //entity_metadata_wrapper('node',$tourneynode);
         $emwtourney->field_tournament_teams_entered[] = $teamNID;
 
         //save it out
@@ -1876,8 +1876,8 @@ function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $
         }
         else
         {
-            $teamName = GetWrapperByEntityID($teamNID)->field_team_name->value();
-            $teamID = GetWrapperByEntityID($teamNID)->field_team_id->value();
+            $teamName = getWrapperByEntityID($teamNID)->field_team_name->value();
+            $teamID = getWrapperByEntityID($teamNID)->field_team_id->value();
 
         }
 
@@ -1972,7 +1972,7 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
             //load up tourney and get credit price
             $tournamentID = getTournamentNodeIDByChallongeID($tournamentURL);
-            $w = GetWrapperByEntityID($tournamentID);
+            $w = getWrapperByEntityID($tournamentID);
             //get price and make negative to reflect debit
             $price = (($w->field_tournament_entry_credits->value()) * -1);
 
@@ -1989,7 +1989,7 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
         //add transaction ID to Player and set to ELIGIBLE
         $emw->field_team_member_transaction = $transaction_id;
-        $emw->field_team_member_eligibility = 'Eligible';
+        $emw->field_team_member_eligibility = MEMBER_ELIGIBLE_STATUS;
         $emw->save();
 
         //
@@ -2005,7 +2005,7 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
 }
 
-function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
+function addPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
     //add player to tournament. When invited set inviteAccepted to 0 until player acknowledges they wish to join.
 
     try {
@@ -2014,7 +2014,7 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
         if(($prePaid || $userID == $currentUser) && $isPaidTourney) {
             //load up tourney and get credit price
             $tournamentID = getTournamentNodeIDByChallongeID($tournamentURL);
-            $w = GetWrapperByEntityID($tournamentID);
+            $w = getWrapperByEntityID($tournamentID);
             //get price and make negative to reflect debit
             $price = (($w->field_tournament_entry_credits->value()) * -1);
 
@@ -2074,7 +2074,7 @@ function AddPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
 
         //if invite accepted set that
         if($inviteAccepted){
-            $emw->field_team_member_entry_confirme = $inviteAccepted;
+            $emw->field_team_member_entry_confirme->set(1);
         }
 
         //save it out
@@ -2167,7 +2167,7 @@ function StartTournamentButtonContextBased($user,$tournamentID)
             $touramentNID = getTournamentNodeIDByChallongeID($tournamentID);
 
 
-            $w = GetWrapperByEntityID($touramentNID);
+            $w = getWrapperByEntityID($touramentNID);
 
             if (($w->field_tournament_status->value() == 'Pending') || ($w->field_tournament_status->value() == 'Registration Closed')) {
 
@@ -2198,7 +2198,7 @@ function StartTournamentButtonContextBased($user,$tournamentID)
                 $touramentNID = getTournamentNodeIDByChallongeID($tournamentID);
 
 
-                $w = GetWrapperByEntityID($touramentNID);
+                $w = getWrapperByEntityID($touramentNID);
 
                 if (($w->field_tournament_status->value() == 'Pending') || ($w->field_tournament_status->value() == 'Registration Closed'))  {
 
@@ -2226,7 +2226,7 @@ function finalzeTeamsTournamentContextBased($user, $tournamentID)
             $touramentNID = getTournamentNodeIDByChallongeID($tournamentID);
 
 
-            $w = GetWrapperByEntityID($touramentNID);
+            $w = getWrapperByEntityID($touramentNID);
 
             if (($w->field_tournament_status->value() == 'Pending') || ($w->field_tournament_status->value() == 'Registration Closed'))  {
 
@@ -2254,7 +2254,7 @@ function updateTeamEligibilityByTournamentContextBased($user, $tournamentID)
             $touramentNID = getTournamentNodeIDByChallongeID($tournamentID);
 
 
-            $w = GetWrapperByEntityID($touramentNID);
+            $w = getWrapperByEntityID($touramentNID);
 
             if (($w->field_tournament_status->value() == 'Pending') || ($w->field_tournament_status->value() == 'Registration Closed'))  {
 
@@ -2283,7 +2283,7 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
             $touramentNID = getTournamentNodeIDByChallongeID($tournamentID);
 
 
-            $w = GetWrapperByEntityID($touramentNID);
+            $w = getWrapperByEntityID($touramentNID);
 
             if ($w->field_tournament_status->value() == 'Started')  {
 
@@ -2381,7 +2381,7 @@ function renderBracket($uri){
         $tournamentID = getURLSegment($uri,1);
 
         //Load up tournament to check status value
-        $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID ));
+        $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID ));
 
         //check if tournament is started before displaying bracket to avoid confusion
         if(($w->field_tournament_status->value() == "Started") || ($w->field_tournament_status->value() == "Completed")){
