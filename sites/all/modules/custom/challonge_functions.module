@@ -2297,7 +2297,30 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
     return $output;
 }
 
-    function addUserBankLedger($customer_uid, $player_uid, $player_team, $credit_value, $type_transaction,$notes, $tournament_id = null, $status){
+    function addCartBankLedger($userID, $creditQuantity){
+
+        try {
+
+            $tranType = t('Credit Added From Purchase');
+            $notes = t('Credits added by system.');
+
+            //make call to created ledger record
+            $result = addUserBankLedger($userID,null,null,$creditQuantity,$tranType,$notes,null,'Committed');
+
+            //return result
+            return $result;
+
+        }
+        catch (ErrorException $e)
+        {
+            _watchdog_log('addCartBankLedger ' . $e->getMessage() . "\r\n" . $e->getPrevious() . "\r\n" . $e->getLine() . "\r\n" . $e->getTraceAsString() . "\r\n");
+            return false;
+
+        }
+
+    }
+
+    function addUserBankLedger($customer_uid, $player_uid=null, $player_team=null, $credit_value, $type_transaction,$notes, $tournament_id = null, $status){
 
         try{
 
