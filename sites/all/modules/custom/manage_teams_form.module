@@ -202,7 +202,7 @@ function manage_teams_form_form($form, &$form_state) {
 
     //If tourney registration closed send back to details page
     // first, load tourney and check status
-    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tw = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
     $tourneyStatus = $tw->field_tournament_status->value();
 
     if($tourneyStatus=="Registration Closed"){
@@ -275,7 +275,7 @@ function manage_teams_form_addPlayer_form($form, &$form_state)
 
     //If tourney registration closed send back to details page
     // first, load tourney and check status
-    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tw = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
     $tourneyStatus = $tw->field_tournament_status->value();
 
     //if registration closed set a message and send to tourney details page
@@ -442,7 +442,7 @@ function manage_teams_form_form_validate($form, &$form_state) {
 
     //If tourney registration closed send back to details page
     // first, load tourney and check status
-    $tw = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $tw = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
     $tourneyStatus = $tw->field_tournament_status->value();
 
     //if registration closed set a message and send to tourney details page
@@ -477,7 +477,7 @@ function manage_teams_form_form_validate($form, &$form_state) {
         $currentUser = $GLOBALS['user'];
 
         //load up tourney info
-        $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+        $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
         //set needed credits
         $price = $w->field_tournament_entry_credits->value();
         //set availablie credits
@@ -620,7 +620,7 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
      * */
 
     //load up tourney info
-    $w = GetWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
     //set needed credits
     $price = $w->field_tournament_entry_credits->value();
     //set availablie credits
@@ -680,7 +680,7 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
 
 
         //add player. If Paid tourney, pass in whether being pre-paid or not.
-        if(AddPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentUser->uid, $prePaid,$isPaidTourney,$tournamentID)){
+        if(addPlayerToTeam($teamID, $playerUID, $roleID, $inviteAccepted, $currentUser->uid, $prePaid,$isPaidTourney,$tournamentID)){
             //display success message
             drupal_set_message(t($playerUsername . ' Added to Roster'));
         }else{
