@@ -2367,8 +2367,6 @@ function finishTournamentLockResultsContextBased($user, $tournamentID)
     }
 
 function getBankBalanceByUser($user_id){
-
-
 try {
     //Call stored proc to caclualate credits balance for user
     $result = db_query('call sp_getUserBankBalanceCalculated(:uid);', array(':uid' => $user_id));
@@ -2378,6 +2376,14 @@ try {
 
     //grab the value from the result set, it's a scalar in reality
     //it !exist if there are no credits for a user
+    //if value is null return 0
+    if (is_numeric($record->credit_balance)){
+        return $record->credit_balance;
+    }
+    else{
+        return 0;
+    }
+
     return $record->credit_balance;
     }
     catch (ErrorException $e)
