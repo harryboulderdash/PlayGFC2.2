@@ -59,69 +59,89 @@ $user = $GLOBALS['user'];
 
 ?>
 
-<div class="col-xs-9" xmlns="http://www.w3.org/1999/html"><br>
-    <div class="pull-right">
-        <?php $status = $fields['field_tournament_status']->content;?>
+<?php $status = $fields['field_tournament_status']->content;?>
 
-        <?php if($status=="Pending"): ?>
-            <?php $fonthtml = '<i class="fa fa-wrench fa-lg"></i>' ?>
-            <?php if(getTeamByTournamentByUser($user->uid, $fields['field_tournament_challonge_url']->content)): ?>
-                <a href="<?php print base_path() . 'node/312/' . $fields['field_tournament_challonge_url']->content ?>" class="btn btn-primary"><i class="fa fa-wrench fa-lg"></i> &nbsp;Manage Team</a>
-            <?php else: ?>
-                <a href="<?php print base_path() . 'node/312/'. $fields['field_tournament_challonge_url']->content ?>" class="btn btn-primary"><i class="fa fa-user-plus fa-lg"></i> &nbsp;Join Tournament</a>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6">
+            <h2>
+                <?php print $fields['field_tournament_name']->content; ?>
+            </h2>
+        </div>
+        <div class="col-sm-6">
+            <a class="btn btn-default" value="View Bracket" href="#tab-3" data-toggle="tab"><i class="fa fa-dashboard fa-lg"></i> &nbsp; View Bracket</a>
+            &nbsp;
+            <?php if($status=="Pending"): ?>
+                <?php if(getTeamByTournamentByUser($user->uid, $fields['field_tournament_challonge_url']->content)): ?>
+                    <a href="<?php print base_path() . 'node/312/' . $fields['field_tournament_challonge_url']->content ?>" class="btn btn-primary active">
+                        <i class="fa fa-wrench fa-lg"></i>
+                        &nbsp;Manage Team
+                    </a>
+                <?php else: ?>
+                    <a href="<?php print base_path() . 'node/312/'. $fields['field_tournament_challonge_url']->content ?>" class="btn btn-primary active">
+                        <i class="fa fa-user-plus fa-lg"></i>
+                        &nbsp;Join Tournament
+                    </a>
+                <?php endif; ?>
             <?php endif; ?>
-        <?php endif; ?>
 
-        <?php if($status=="Registration Closed"): ?>
-            <div data-animation="rotateIn" data-animation-delay="1000" style="margin-left: 5px; margin-right: 5px; border-radius: 1px; border-style: solid; animation-delay: 1000ms;" class="alert alert-danger animation rotateIn animation-visible"><button type="button" class="close" data-dismiss="alert" aria-hidden="true"><i class="fa fa-times"></i></button>
-                <b>Note: Registration Closed! Startup in progress.</b>
-            </div>
-        <?php endif; ?>
+            <?php if($status=="Registration Closed"): ?>
+                <div data-animation="rotateIn" data-animation-delay="1000" style="margin-left: 5px; margin-right: 5px; border-radius: 1px; border-style: solid; animation-delay: 1000ms;" class="alert alert-danger animation rotateIn animation-visible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+                        <i class="fa fa-times"></i>
+                    </button>
+                    <b>Note: Registration Closed! Startup in progress.</b>
+                </div>
+            <?php endif; ?>
 
-        <!--
-        <a href="javascript:void(0);" id="maximizeChat" title="Maximize" class="btn btn-primary"><i class="fa fa-gamepad fa-lg"></i> &nbsp;Live Support</a>
-        -->
+        </div>
     </div>
-    <h2>
-      <?php print '    ' . $fields['field_tournament_name']->content; ?>
-    </h2>
-    <h3 align="top">
-      <img class="pull-left" src="http://www.umggaming.com/images/theme/flag/na.png">
-      <?php print $fields['field_tournament_gaming_platform']->content; ?>
-    </h3>
-    <h5 align="bottom">
-        <i class="fa fa-trophy fa-2x" ></i> 1st Prize: <?php print $fields['field_tournament_prize']->content; ?>
-    </h5>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3>
+                <img src="http://www.umggaming.com/images/theme/flag/na.png">
+                <?php print $fields['field_tournament_gaming_platform']->content; ?>
+            </h3>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom: 10">
+        <div class="col-sm-2 bg-primary">
+            <strong>Date:</strong> <?php print $fields['field_tournament_time_1']->content; ?>
+        </div>
+        <div class="col-sm-2 bg-primary">
+            <strong>Entry:</strong> <?php print $fields['field_tournament_entry_credits']->content; ?>
+        </div>
+        <div class="col-sm-2 bg-primary">
+            <strong>Max Teams:</strong> <?php print $fields['field_bracket_size']->content; ?>
+        </div>
+        <div class="col-sm-2 bg-primary">
+            <strong>Eligible Teams:</strong> <?php print $fields['field_field_num_eligible_teams']->content; ?>
+        </div>
+        <div class="col-sm-4">
 
-    <table>
-        <thead>
-          <tr style="background: #27ae60; color: white" >
-              <td><strong>Date:</strong> <?php print $fields['field_tournament_time_1']->content; ?></td>
-              <td><strong>Entry:</strong> <?php print $fields['field_tournament_entry_credits']->content; ?></td>
-              <td><strong>Max Teams:</strong> <?php print $fields['field_bracket_size']->content; ?></td>
-              <td><strong>Eligible Teams:</strong> <?php print $fields['field_field_num_eligible_teams']->content; ?></td>
-          </tr>
-        </thead>
-    </table>
-    <table>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-sm-4" style="margin-bottom: 10">
+            <i class="fa fa-trophy fa-2x" style="color:gold"></i> 1st Prize: <?php print $fields['field_tournament_prize']->content; ?><br>
+            <i class="fa fa-trophy fa-2x" style="color:silver"></i> 2nd Prize: <?php print $fields['field_tournament_prize']->content; ?><br>
+            <i class="fa fa-trophy fa-2x" style="color:brown"></i> 3rd Prize: <?php print $fields['field_tournament_prize']->content; ?>
 
-        <tbody>
-        <tr>
-            <td><strong>Start Time:</strong> <?php print $fields['field_tournament_time']->content; ?></td>
-            <td><strong>Min Team Size:</strong> <?php print $fields['field_minimum_team_size']->content; ?></td>
-            <td rowspan="3" class="pull-right">
-                <a class="btn btn-default" value="View Bracket" href="#tab-3" data-toggle="tab"><i class="fa fa-dashboard fa-lg"></i> &nbsp; View Bracket</a>
-            </td>
-        </tr>
-        <tr>
-            <td><strong>Registration Open:</strong> <?php print $fields['field_registration_window']->content; ?></td>
-            <td><strong>Max Team Size:</strong> <?php print $fields['field_maximum_team_size']->content; ?></td>
-        </tr>
-        <tr>
-            <td><strong>Registration Close:</strong> <?php print $fields['field_registration_window_1']->content; ?></td>
-            <td><strong>Bracket Type:</strong> <?php print $fields['field_tournament_type']->content; ?></td>
-        </tr>
-        </tbody></table>
+        </div>
+        <div class="col-sm-4" style="margin-bottom: 10">
+            <strong>Start Time:</strong> <?php print $fields['field_tournament_time']->content; ?><br>
+            <strong>Registration Open:</strong> <?php print $fields['field_registration_window']->content; ?><br>
+            <strong>Registration Close:</strong> <?php print $fields['field_registration_window_1']->content; ?>
+        </div>
+        <div class="col-sm-4">
+            <strong>Min Team Size:</strong> <?php print $fields['field_minimum_team_size']->content; ?><br>
+            <strong>Max Team Size:</strong> <?php print $fields['field_maximum_team_size']->content; ?><br>
+            <strong>Bracket Type:</strong> <?php print $fields['field_tournament_type']->content; ?>
+        </div>
+
+    </div>
 </div>
+
 
 
