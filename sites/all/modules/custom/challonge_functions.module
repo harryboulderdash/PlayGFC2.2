@@ -1992,7 +1992,7 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
         $emw->field_team_member_eligibility = MEMBER_ELIGIBLE_STATUS;
         $emw->save();
 
-        //
+        return true;
 
       }
 
