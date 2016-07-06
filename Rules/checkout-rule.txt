@@ -1,0 +1,27 @@
+{ "uc_payment_uc_payment_credit_user_bank_account" : {
+    "LABEL" : "Credit user bank account after tokens order paid",
+    "PLUGIN" : "reaction rule",
+    "OWNER" : "rules",
+    "REQUIRES" : [ "uc_order", "rules", "php", "uc_cart" ],
+    "ON" : { "uc_checkout_complete" : [] },
+    "IF" : [
+      { "uc_order_condition_has_product_class" : {
+          "order" : [ "order" ],
+          "product_classes" : { "value" : { "credits" : "credits" } },
+          "required" : "0",
+          "forbidden" : "0"
+        }
+      }
+    ],
+    "DO" : [
+      { "LOOP" : {
+          "USING" : { "list" : [ "order:products" ] },
+          "ITEM" : { "list_item" : "Cart Product" },
+          "DO" : [
+            { "php_eval" : { "code" : "\/\/captures completed credit purchase and adds to user\u0027s bank ledger\r\n\/\/provides message to user\r\n\r\n\/\/set credit amount\r\n$credits = [list-item:weight] * [list-item:qty];\r\n\r\n\/\/add credits to users bank\r\n$result = addCartBankLedger([order:uid], $credits);\r\n\r\n\/\/drupal_set_message(\u0027This is a message and qty: \u0027 . [list-item:qty] . \u0027 weight: \u0027 . [list-item:weight] . \u0027 uid: \u0027 . [order:uid]);\r\n   \r\n\/\/display stuff for the user\r\nif($result){\r\n     $msg = $credits . \u0027 credits have been added to your Account. View transaction details at \u0027 . l(\u0027My GFC Bank Account\u0027,\u0027\/my-account\/bank-ledger\u0027) . \u0027. A confirmation email has also been sent to your email address on file.\u0027;\r\n     drupal_set_message($msg);\r\n} \r\nelse{\r\n     $msg = \u0027Problem completing your transaction. Please contact support.\u0027;\r\n     drupal_set_message($msg);\r\n}" } }
+          ]
+        }
+      }
+    ]
+  }
+}
