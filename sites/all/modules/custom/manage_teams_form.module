@@ -386,6 +386,75 @@ function manage_teams_form_removeMember_form($form,&$form_state, $member_id,$use
     );
 }
 
+function manage_teams_form_acceptInvite_form($form,&$form_state, $member_id,$username,$teamNID,$tournamentURL) {
+
+    return array(
+
+        'teamid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $teamNID,
+        ),
+
+        'tournamentid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $tournamentURL,
+        ),
+
+        'memberid' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $member_id,
+        ),
+
+        'username' => array(
+            '#type' => 'hidden',
+            '#required' => TRUE,
+            '#value' => $username,
+        ),
+
+        'submit' => array(
+            '#type' => 'submit',
+            '#value' => 'Accept Invite',
+            '#attributes' => array('class' => array('btn-sm', 'btn-primary', 'btn')),
+
+        ),
+
+    );
+}
+
+function manage_teams_form_acceptInvite_form_submit($form, $form_state) {
+
+    //get user uid
+    $currentUser = $GLOBALS['user'];
+
+
+    if (!empty($form_state['input']['memberid'])) {
+        $nid = $form_state['input']['memberid'];
+        $username = $form_state['input']['username'];
+        $teamID = $form_state['input']['teamid'];
+        $tournamentID = $form_state['input']['tournamentid'];
+
+
+        $result = acceptPlayerInvite($tournamentID, $currentUser->uid, $nid);
+
+        if(updateSingleTeamStatus($tournamentID,$teamID)){
+
+            //display success message
+            drupal_set_message(t($username . ' Invite accepted.'));
+
+            return true;
+
+        }else{
+            drupal_set_message(t('Problem accepting invite for ' . $username . ' . Contact Support. '));
+
+
+            return false;
+        }
+
+    }
+}
 
 /**
  * btn-sm btn-default btn
