@@ -98,7 +98,7 @@ class TourneyEditView_field_handler_tourney_edit extends views_handler_field {
         // Grab the nodes we need to update and update them.
         $nodes = node_load_multiple(array_keys($updates));
         foreach ($nodes as $nid => $node) {
-            $wrap = GetWrapperByEntityID($nid);
+            $wrap = getWrapperByEntityID($nid);
             $wrap->field_team_1_score->set($value);
             $wrap->field_team_2_score->set($value2);
 

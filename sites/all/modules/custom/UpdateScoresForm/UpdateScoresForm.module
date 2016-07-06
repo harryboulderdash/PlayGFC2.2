@@ -247,7 +247,7 @@ function UpdateScoresForm_form($form, &$form_state) {
     $tournamentID = getTournamentNodeIDByChallongeID($form_state['build_info']['args'][$count-2]);
 
     //Load and update match team scores
-    $w_match = GetWrapperByEntityID($matchID);
+    $w_match = getWrapperByEntityID($matchID);
     $team_1_name = $w_match->field_match_team_1->field_team_name->value();
     $team_2_name = $w_match->field_match_team_2->field_team_name->value();
 

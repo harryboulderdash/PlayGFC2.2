@@ -200,10 +200,24 @@ function manage_tournaments_form_submit($form, &$form_state){
     $tournamentID =  getTournamentNodeIDByChallongeID(getURLSegment(request_uri(), 1));
 
     //check to insure it's not started already
-    $w = GetWrapperByEntityID($tournamentID);
+    $w = getWrapperByEntityID($tournamentID);
 
     //if it is stop and notify user.
     if($w->field_tournament_status->value()=='Started'){drupal_set_message('Tourney already started.'); return;}
+
+    //TODO make the following async and return to user
+    /*
+     *
+     * //$myvar1 = 'tid5761aaa3d19e0';
+    //$myvar2 = 'MYFANTASTICTEAM';
+
+    //$handle = background_process_start('StartTournament', $tournamentID;
+
+    //print_r($handle);
+
+    //print background_process_is_finished($handle);
+     * */
+
 
     //Call the Start function
    if( StartTournament($tournamentID)){
@@ -258,7 +272,7 @@ function manage_tournaments_complete_tournament_form_submit($form, &$form_state)
 
         //validate state of data for tourney and fix where needed
         //get and corrections back as array and display them.
-        $arrErrors = CompleteTournament($tournamentID);
+        $arrErrors = completeTournament($tournamentID);
 
         if ($arrErrors){
             //display message on screen
