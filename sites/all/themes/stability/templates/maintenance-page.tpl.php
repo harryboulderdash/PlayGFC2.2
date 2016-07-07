@@ -14,8 +14,8 @@
   <?php print $head; ?>
 
   <title><?php print $head_title; ?></title>
-  <meta name="description" content="Stability - Responsive HTML5 Drupal Theme - 1.0">
-  <meta name="author" content="http://themeforest.net/user/NikaDevs">
+  <meta name="description" content="Gaming for Cancer, knocking Cancer offline one game at a time.">
+  <meta name="author" content="https://www.playgfc.com">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
   <!-- Mobile Specific Metas

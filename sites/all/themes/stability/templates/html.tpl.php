@@ -43,47 +43,5 @@
   <?php print $page_bottom; ?>
 
 
-  <?php if(strpos($_SERVER['HTTP_HOST'], 'nikadevs') !== FALSE): ?>
-    <link rel="stylesheet" href="<?php print base_path() . drupal_get_path('theme', 'stability'); ?>/css/skins/red.css">
-    <div class="style-switcher visible-md visible-lg" id="style-switcher">
-      <h3 class="show">Style Switcher <a href="#"><i class="fa fa-cog"></i></a></h3>
-      <div class="style-switcher-body">
-        <h4>Colors</h4>
-        <ul class="styles-switcher-colors">
-          <li><a href="#" class="color-red"></a></li>
-          <li><a href="#" class="color-blue"></a></li>
-          <li><a href="#" class="color-green"></a></li>
-          <li><a href="#" class="color-orange"></a></li>
-          <li><a href="#" class="color-yellow"></a></li>
-          <li><a href="#" class="color-violet"></a></li>
-          <li><a href="#" class="color-silver"></a></li>
-          <li><a href="#" class="color-asbestos"></a></li>
-        </ul>
-        <h4>Layout</h4>
-        <ul class="style-switcher-layout">
-          <li><a href="index-boxed.html" class="layout-boxed">Boxed</a></li>
-          <li><a href="#" class="layout-wide active">Wide</a></li>
-        </ul>
-        <h4>Patterns</h4>
-        <ul class="style-switcher-patterns">
-          <li><a href="#" class="brickwall"></a></li>
-          <li><a href="#" class="cream_pixels"></a></li>
-          <li><a href="#" class="grey_wash_wall"></a></li>
-          <li><a href="#" class="greyzz"></a></li>
-          <li><a href="#" class="mooning"></a></li>
-          <li><a href="#" class="p5"></a></li>
-          <li><a href="#" class="retina_wood"></a></li>
-          <li><a href="#" class="shattered"></a></li>
-          <li><a href="#" class="sos"></a></li>
-          <li><a href="#" class="squared_metal"></a></li>
-          <li><a href="#" class="subtle_grunge"></a></li>
-          <li><a href="#" class="binding_dark"></a></li>
-        </ul>
-      </div>
-    </div>
-    <link rel="stylesheet" href="<?php print base_path() . drupal_get_path('theme', 'stability'); ?>/css/style-switcher.css">
-    <script src="<?php print base_path() . drupal_get_path('theme', 'stability'); ?>/js/style-switcher.js"></script>
-  <?php endif; ?>
-
 </body>
 </html>
