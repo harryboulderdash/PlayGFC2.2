@@ -84,7 +84,6 @@ $content['add_to_cart']['#form']['qty']['#suffix'] = '<input type="button" value
     <div class="owl-carousel owl-theme owl-slider thumbnail">
     <?php foreach(element_children($content['uc_product_image']) as $key): ?>
       <div class="item">
-        <?php if($node->nid == 117 && strpos($_SERVER['HTTP_HOST'], 'nikadevs') !== FALSE) {$content['uc_product_image'][$key]['#image_style'] = 'product_346_470'; } ?>
         <?php print render($content['uc_product_image'][$key]); ?>
       </div>
     <?php endforeach; ?>
