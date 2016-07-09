@@ -434,31 +434,36 @@ function manage_teams_form_acceptInvite_form_validate($form, $form_state){
     //drupal_set_message('$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
     //return true;
 
-    //load up tourney info
-    $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
-    //set needed credits
-    $price = $w->field_tournament_entry_credits->value();
-    //set availablie credits
+    //load team members object to check for transaction id
+    $wr = entity_metadata_wrapper('team_members',$nid);
 
-    //drupal_set_message('$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
-   // return true;
+    if((!$wr->field_team_member_transaction->value()) && (isPaidTourney($tournamentID))) {
+        $msg .= ' Credits have been applied to your entry, check My Bank for transaction details.';
 
-    $availableCredits = getBankBalanceByUser($userID);
+        //load up tourney info
+        $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+        //set needed credits
+        $price = $w->field_tournament_entry_credits->value();
+        //set availablie credits
 
+        //drupal_set_message('$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
+        // return true;
 
+        $availableCredits = getBankBalanceByUser($userID);
 
-    //if not adequate credits set message.
-    if($availableCredits < $price) {
-        //inform inviter that credits are not adequate
-        $message .= t('Warning: you need more GFC credits to join this Tournament.');
-        $message .= t('Get them now at: ' . l('Shop GFC', '/Shop') . '.');
+        //if not adequate credits set message.
+        if ($availableCredits < $price) {
+            //inform inviter that credits are not adequate
+            $message .= t('Warning: you need more GFC credits to join this Tournament.');
+            $message .= t('Get them now at: ' . l('Shop GFC', '/Shop') . '.');
 
-        form_set_error('Player_Username', $message);
-        return true;
+            form_set_error('Player_Username', $message);
+            return true;
 
+        }
     }
 
-    drupal_set_message('$availableCredits' . $availableCredits .'$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
+    //drupal_set_message('$availableCredits' . $availableCredits .'$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
     return true;
 
     //make sure player has credits if they are needed, as well as gamertag.
