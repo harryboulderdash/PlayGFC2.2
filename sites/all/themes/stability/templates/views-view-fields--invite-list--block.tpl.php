@@ -54,6 +54,8 @@
 
     <td><?php print $fields['field_team_name']->content; ?></td>
     <td><?php print $fields['field_team_member_invited_by']->content; ?></td>
+    <td><?php print $fields['field_tournament_entry_credits']->content; ?></td>
+
     <td>
         <?php if($fields['field_team_member_pre_paid']->content==1){print 'Yes';}else{print 'No';} ?>
     </td>
