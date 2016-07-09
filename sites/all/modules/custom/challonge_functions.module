@@ -1984,11 +1984,11 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
             }
 
-        }
-        //
+            //add transaction ID to Player and set to ELIGIBLE
+            $emw->field_team_member_transaction = $transaction_id;
 
-        //add transaction ID to Player and set to ELIGIBLE
-        $emw->field_team_member_transaction = $transaction_id;
+        }
+
         $emw->field_team_member_eligibility = MEMBER_ELIGIBLE_STATUS;
         $emw->save();
 
@@ -2007,6 +2007,9 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 
 function addPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
     //add player to tournament. When invited set inviteAccepted to 0 until player acknowledges they wish to join.
+
+    drupal_set_message('$teamID: ' . $teamID . ' $userID: ' . $userID . ' $roleID: ' . $roleID . ' $inviteAccepted: ' . $inviteAccepted . ' $currentUser: ' . $currentUser .  ' $prePaid: ' . $prePaid . ' $isPaidTourney: ' . $isPaidTourney .  ' $tournamentURL: ' . $tournamentURL);
+    //return true;
 
     try {
 
@@ -2052,7 +2055,7 @@ function addPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
 
         //if player is PREPAID
         //add transaction id
-        if(($prePaid || $userID = $currentUser) && $isPaidTourney) {
+        if(($prePaid || $userID == $currentUser) && $isPaidTourney) {
             $emw->field_team_member_transaction = $transaction_id;
         }
 
