@@ -47,16 +47,22 @@
 
 
 <tr>
-    <td><?php print $fields['field_tournament_name']->content; ?></td>
+    <td><?php print $fields['created']->content; ?></td>
+    <td>
+        <?php print l($fields['field_tournament_name']->content,'/node/493/' . $fields['field_tournament_challonge_url']->content); ?>
+     </td>
+
     <td><?php print $fields['field_team_name']->content; ?></td>
     <td><?php print $fields['field_team_member_invited_by']->content; ?></td>
-    <td><?php print $fields['field_tournament_challonge_url']->content; ?></td>
+    <td>
+        <?php if($fields['field_team_member_pre_paid']->content==1){print 'Yes';}else{print 'No';} ?>
+    </td>
+
     <td>
         <?php
         //invoke form for each row and pass parameters to it
         echo render(drupal_get_form('manage_teams_form_acceptInvite_form',$fields['id_1']->content,$fields['uid']->content,$fields['field_team_reference_from_team_m']->content,$fields['field_tournament_challonge_url']->content))
 
-        //manage_teams_form_acceptInvite_form( $member_id,$username,$teamNID,$tournamentURL)
         ?>
     </td>
 
