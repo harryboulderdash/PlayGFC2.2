@@ -423,37 +423,74 @@ function manage_teams_form_acceptInvite_form($form,&$form_state, $member_id,$use
 
     );
 }
+function manage_teams_form_acceptInvite_form_validate($form, $form_state){
+
+
+        $nid = $form_state['input']['memberid'];
+        $userID = $form_state['input']['username'];
+        $teamID = $form_state['input']['teamid'];
+        $tournamentID = $form_state['input']['tournamentid'];
+
+    //drupal_set_message('$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
+    //return true;
+
+    //load up tourney info
+    $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+    //set needed credits
+    $price = $w->field_tournament_entry_credits->value();
+    //set availablie credits
+
+    //drupal_set_message('$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
+   // return true;
+
+    $availableCredits = getBankBalanceByUser($userID);
+
+
+
+    //if not adequate credits set message.
+    if($availableCredits < $price) {
+        //inform inviter that credits are not adequate
+        $message .= t('Warning: you need more GFC credits to join this Tournament.');
+        $message .= t('Get them now at: ' . l('Shop GFC', '/Shop') . '.');
+
+        form_set_error('Player_Username', $message);
+        return true;
+
+    }
+
+    drupal_set_message('$availableCredits' . $availableCredits .'$nid:' . $nid . '$userID' . $userID . '$teamID' . $teamID . '$tournamentID' . $tournamentID);
+    return true;
+
+    //make sure player has credits if they are needed, as well as gamertag.
+}
 
 function manage_teams_form_acceptInvite_form_submit($form, $form_state) {
 
     //get user uid
     $currentUser = $GLOBALS['user'];
 
-
-    if (!empty($form_state['input']['memberid'])) {
-        $nid = $form_state['input']['memberid'];
-        $username = $form_state['input']['username'];
-        $teamID = $form_state['input']['teamid'];
-        $tournamentID = $form_state['input']['tournamentid'];
+    $nid = $form_state['input']['memberid'];
+    $userID = $form_state['input']['username'];
+    $teamID = $form_state['input']['teamid'];
+    $tournamentID = $form_state['input']['tournamentid'];
 
 
-        $result = acceptPlayerInvite($tournamentID, $currentUser->uid, $nid);
+    $result = acceptPlayerInvite($tournamentID, $userID, $nid);
 
-        if(updateSingleTeamStatus($tournamentID,$teamID)){
+    if(updateSingleTeamStatus($tournamentID,$teamID)){
 
-            //display success message
-            drupal_set_message(t($username . ' Invite accepted.'));
+        //display success message
+        drupal_set_message(t('Invite accepted, you have been added to the team.'));
 
-            return true;
+        return $result;
 
-        }else{
-            drupal_set_message(t('Problem accepting invite for ' . $username . ' . Contact Support. '));
+    }else{
+        drupal_set_message(t('Problem accepting invite for ' . getUserByUserID($userID)->name . ' . Contact Support. '));
 
-
-            return false;
-        }
-
+        return false;
     }
+
+
 }
 
 /**
