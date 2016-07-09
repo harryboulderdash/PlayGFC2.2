@@ -480,7 +480,19 @@ function manage_teams_form_acceptInvite_form_submit($form, $form_state) {
     if(updateSingleTeamStatus($tournamentID,$teamID)){
 
         //display success message
-        drupal_set_message(t('Invite accepted, you have been added to the team.'));
+        $msg = 'Invite accepted, you have been added to the team.';
+
+
+        //load team members object to check for transaction id
+        $wr = entity_metadata_wrapper('team_members',$nid);
+
+        if(($wr->field_team_member_transaction->value()) && (isPaidTourney($tournamentID))) {
+            $msg .= ' Credits have been applied to your entry, check My Bank for transaction details.';
+        }
+
+        //display success message
+        drupal_set_message(t($msg));
+        //TODO: indicate credits deducted in message, so need to know prepaid and paidtourney
 
         return $result;
 
