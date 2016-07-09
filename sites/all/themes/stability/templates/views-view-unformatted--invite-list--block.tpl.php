@@ -35,7 +35,7 @@ PS GAMERTAG	LOGO	ROLE	USERNAME	TEAM MEMBER ENTITY ID
             <table>
                 <thead>
                 <tr>
-                    <th>Tournament</th><th>Team</th><th>Invited By</th><th>Link</th><th></th>
+                    <th>Invite Time</th><th>Tournament</th><th>Team</th><th>Invited By</th><th>Entry Prepaid</th><th></th>
                 </tr>
                 </thead>
                 <tbody>
