@@ -799,6 +799,7 @@ function manage_teams_form_addPlayer_form_submit($form, &$form_state){
         else{
             $prePaid = true; //temp pending logic
             $isPaidTourney = false;
+            $inviteAccepted = 1;
         }
 
 
