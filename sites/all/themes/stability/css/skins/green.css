@@ -177,6 +177,13 @@ footer .widget_categories ul li:hover {
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff27ae60', endColorstr='#ff229955', GradientType=0);
   border-color: #229955;
 }
+
+.bg-primary{
+  background-color: #2BC016;
+  padding:10px 10px 10px 10px;
+
+
+}
 .btn-primary:hover,
 .btn-primary:focus {
   background: #229955 !important;
