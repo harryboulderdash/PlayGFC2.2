@@ -23,7 +23,7 @@ PS GAMERTAG	LOGO	ROLE	USERNAME	TEAM MEMBER ENTITY ID
     <td><?php print $fields['field_gamertag']->content; ?></td>
     <td><?php print $fields['field_team_member_role']->content; ?></td>
     <td><?php print $fields['name']->content; ?></td>
-    <td><?php print $fields['field_team_member_status']->content; ?></td>
+    <td><?php print $fields['field_team_member_eligibility']->content; ?></td>
     <td>
     <?php
         //invoke form for each row and pass parameters to it
