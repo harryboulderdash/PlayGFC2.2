@@ -124,9 +124,9 @@ $user = $GLOBALS['user'];
     <br>
     <div class="row">
         <div class="col-sm-4" style="margin-bottom: 10">
-            <i class="fa fa-trophy fa-2x" style="color:gold"></i> 1st Prize: <?php print $fields['field_tournament_prize']->content; ?><br>
-            <i class="fa fa-trophy fa-2x" style="color:silver"></i> 2nd Prize: <?php print $fields['field_tournament_prize']->content; ?><br>
-            <i class="fa fa-trophy fa-2x" style="color:brown"></i> 3rd Prize: <?php print $fields['field_tournament_prize']->content; ?>
+            <i class="fa fa-trophy fa-2x" style="color:gold"></i> 1st Prize: <?php print $fields['field_tournament_prize']->content; ?>*<br>
+            <i class="fa fa-trophy fa-2x" style="color:silver"></i> 2nd Prize: <?php print $fields['field_tournament_2nd_prize']->content; ?>*<br>
+            <i class="fa fa-trophy fa-2x" style="color:brown"></i> 3rd Prize: <?php print $fields['field_tournament_3rd_prize']->content; ?>*
 
         </div>
         <div class="col-sm-4" style="margin-bottom: 10">
@@ -140,6 +140,11 @@ $user = $GLOBALS['user'];
             <strong>Bracket Type:</strong> <?php print $fields['field_tournament_type']->content; ?>
         </div>
 
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            * <i>note: prizes will be adjusted based on number of eligible players after start of tournament.</i>
+        </div>
     </div>
 </div>
 
