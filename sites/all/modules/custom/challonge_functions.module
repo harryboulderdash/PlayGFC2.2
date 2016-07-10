@@ -38,8 +38,24 @@ function _watchdog_log($error, $object = NULL, $backtrace = FALSE, $msg_type = W
 //CONSTANTS
 define('CAPTAIN_ROLE', '69');
 define('MEMBER_REMOVED_STATUS','112');
-define('MEMBER_ELIGIBLE_STATUS','114');
-define('MEMBER_INVITED_STATUS','117');
+define('MEMBER_ELIGIBLE_STATUS','113'); //113 --114
+define('MEMBER_INVITED_STATUS','114'); // 114 --117
+define('MEMBER_NEEDS_CREDITS_STATUS','115'); //115
+define('MEMBER_MISSING_GAMERTAG_STATUS','118'); //118
+define('TEAM_NEEDS_PLAYERS_STATUS','116'); //116
+define('TEAM_EXCEEDS_PLAYERS_STATUS','117'); //117
+
+
+/*
+ * Need Credits	edit
+
+Need Eligible Players	edit
+
+Exceeds Allowed Players	edit
+
+Missing Gamertag
+ *
+ * */
 
 
 
@@ -283,6 +299,9 @@ function updateSingleTeamStatus($tournamentURL,$teamNID){
                 $numMembers = 0;
             }
 
+            //TODO: DEBUG ONLY
+            drupal_set_message('count of eligible players: ' . $numMembers);
+
             //_watchdog_log('ELIGIBILITY UPDATE -- LOOKED UP TEAM MEMBERS: ' . $numMembers . ' WERE FOUND. ' . (microtime(true) - $start));
 
 
@@ -312,7 +331,8 @@ function updateSingleTeamStatus($tournamentURL,$teamNID){
 
 
         //return NULL if no team found
-        return true;
+        //return true;
+        return $numMembers;
 
     } catch (ErrorException $e) {
         _watchdog_log($e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
@@ -1632,7 +1652,7 @@ function getTeamByTournamentByUser($currentUserUID, $tournamentURL){
 
             //test only
             //return $result;
-            _watchdog_log('USER HAS A TOURNEY TEAM ALREADY: ' . implode(" ",array_keys($result['team_members'])), NULL,FALSE, WATCHDOG_DEBUG);
+           // _watchdog_log('USER HAS A TOURNEY TEAM ALREADY: ' . implode(" ",array_keys($result['team_members'])), NULL,FALSE, WATCHDOG_DEBUG);
 
             $teamMembers = entity_load('team_members', array_keys($result['team_members']));
 
@@ -2008,7 +2028,7 @@ function acceptPlayerInvite($tournamentURL, $userID, $teamMemberID){
 function addPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUser, $prePaid, $isPaidTourney, $tournamentURL){
     //add player to tournament. When invited set inviteAccepted to 0 until player acknowledges they wish to join.
 
-    drupal_set_message('$teamID: ' . $teamID . ' $userID: ' . $userID . ' $roleID: ' . $roleID . ' $inviteAccepted: ' . $inviteAccepted . ' $currentUser: ' . $currentUser .  ' $prePaid: ' . $prePaid . ' $isPaidTourney: ' . $isPaidTourney .  ' $tournamentURL: ' . $tournamentURL);
+    //drupal_set_message('$teamID: ' . $teamID . ' $userID: ' . $userID . ' $roleID: ' . $roleID . ' $inviteAccepted: ' . $inviteAccepted . ' $currentUser: ' . $currentUser .  ' $prePaid: ' . $prePaid . ' $isPaidTourney: ' . $isPaidTourney .  ' $tournamentURL: ' . $tournamentURL);
     //return true;
 
     try {
@@ -2078,6 +2098,7 @@ function addPlayerToTeam($teamID, $userID, $roleID, $inviteAccepted, $currentUse
         //if invite accepted set that
         if($inviteAccepted){
             $emw->field_team_member_entry_confirme->set(1);
+            $emw->field_team_member_eligibility = MEMBER_ELIGIBLE_STATUS;
         }
 
         //save it out
