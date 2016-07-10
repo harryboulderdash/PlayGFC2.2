@@ -54,17 +54,23 @@
 
     <td><?php print $fields['field_team_name']->content; ?></td>
     <td><?php print $fields['field_team_member_invited_by']->content; ?></td>
-    <td><?php print $fields['field_tournament_entry_credits']->content; ?></td>
-
     <td>
-        <?php if($fields['field_team_member_pre_paid']->content==1){print 'Yes';}else{print 'No';} ?>
+        <?php if($fields['field_team_member_pre_paid']->content==1){
+            print 'Pre-Paid';
+        }else{
+            $fields['field_tournament_entry_credits']->content;
+        }
+        ?>
     </td>
 
     <td>
         <?php
-        //invoke form for each row and pass parameters to it
-        echo render(drupal_get_form('manage_teams_form_acceptInvite_form',$fields['id_1']->content,$fields['uid']->content,$fields['field_team_reference_from_team_m']->content,$fields['field_tournament_challonge_url']->content))
-
+        if($fields['field_team_member_entry_confirme']->content==0) {
+            //invoke form for each row and pass parameters to it
+            echo render(drupal_get_form('manage_teams_form_acceptInvite_form', $fields['id_1']->content, $fields['uid']->content, $fields['field_team_reference_from_team_m']->content, $fields['field_tournament_challonge_url']->content));
+        }else{
+            print 'Invite Accepted';
+        }
         ?>
     </td>
 
