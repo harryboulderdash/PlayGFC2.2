@@ -742,20 +742,25 @@ function manage_teams_form_addPlayer_form_validate($form, &$form_state) {
      *
      * */
 
-    //load up tourney info
-    $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
-    //set needed credits
-    $price = $w->field_tournament_entry_credits->value();
-    //set availablie credits
-    $availableCredits = getBankBalanceByUser($currentUser->uid);
-    //if not adequate credits set message.
-    if($availableCredits < $price){
-        //inform inviter that credits are not adequate
-        $message .= t('Warning: you need more credits to pre-pay for ' . $playerValue . '. ');
-        $message .= t('Get them now at: ' . l('Shop GFC','/Shop') .  ' , or de-select the pre-pay option and re-submit.');
+    $prePaid = $form_state['values']['Prepay_Player'];
 
-        form_set_error('Player_Username', $message);
-        return true;
+    if((isPaidTourney($tournamentID)) && $prePaid) {
+        //load up tourney info
+        $w = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentID));
+        //set needed credits
+        $price = $w->field_tournament_entry_credits->value();
+        //set availablie credits
+        $availableCredits = getBankBalanceByUser($currentUser->uid);
+        //if not adequate credits set message.
+        if($availableCredits < $price){
+            //inform inviter that credits are not adequate
+            $message .= t('Warning: you need more credits to pre-pay for ' . $playerValue . '. ');
+            $message .= t('Get them now at: ' . l('Shop GFC','/Shop') .  ' , or de-select the pre-pay option and re-submit.');
+    
+            form_set_error('Player_Username', $message);
+            return true;
+        }
+    
     }
 
 }
