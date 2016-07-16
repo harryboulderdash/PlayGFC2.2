@@ -1,0 +1,65 @@
+.email-background{
+    background-color: #eee;
+    padding: 10px;
+}
+
+.email-container{
+    max-width: 500px;
+    background-color: white;
+    font-family: sans-serif;
+    margin: 0px auto;
+    overflow: hidden;
+    border-radius: 5px;
+    text-align: justify;
+
+}
+
+.email-preheader{
+    background-color: #eee;
+    color: #eee;
+    font-size: 5px;
+}
+
+image{
+    max-width: 100%;
+}
+
+p{
+    margin: 20px;
+    font-size: 18px;
+    font-weight: 300;
+    color: #666;
+    line-height: 1.5;
+}
+
+.cta{
+    text-align: center;
+    margin: 20px;}
+
+    .cta a{
+        text-decoration: none;
+        display: inline-block;
+        background-color: #3d87f5;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        }
+
+
+h1{
+    text-align: center;
+}
+
+.footer-junk{
+    padding: 20px;
+    background: none;
+    font-size: 12px;
+
+    max-width: 500px;
+    font-family: sans-serif;
+    margin: 0px auto;
+    overflow: hidden;
+    border-radius: 5px;
+    text-align: center;
+
+}
