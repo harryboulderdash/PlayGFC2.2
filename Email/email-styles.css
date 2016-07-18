@@ -1,6 +1,27 @@
+img{
+    max-width: 225px;
+    border-radius: 10px;
+    margin: auto;
+    display: inline-block;
+
+}
+
+#images{
+    text-align:center;
+}
+
 .email-background{
-    background-color: #eee;
+    background-color: #27ae60;
     padding: 10px;
+}
+
+.email-header{
+    max-width: 500px;
+    padding: 20px 0px;
+    margin: 0px auto;
+    overflow: hidden;
+    border-radius: 5px;
+
 }
 
 .email-container{
@@ -9,15 +30,13 @@
     font-family: sans-serif;
     margin: 0px auto;
     overflow: hidden;
-    border-radius: 5px;
-    text-align: justify;
-
+    border-radius: 10px;
+    text-align: left;
 }
 
 .email-preheader{
-    background-color: #eee;
-    color: #eee;
-    font-size: 5px;
+    color: #27ae60;
+    font-size: 8px;
 }
 
 image{
@@ -26,11 +45,40 @@ image{
 
 p{
     margin: 20px;
+    font-size: 20px;
+    font-weight: 300;
+    color: #666;
+    line-height: 1.5;
+}
+
+ul{ margin: 20px 15px;
+    font-size: 18px;
+    font-weight: 300;
+    color: #666;
+    line-height: 1.5;}
+
+ol{
+    margin: 20px;
     font-size: 18px;
     font-weight: 300;
     color: #666;
     line-height: 1.5;
 }
+li{
+    margin: 10px 0;
+    font-family: sans-serif;
+    line-height: 1.5;
+    font-weight: 300;
+
+}
+
+a{
+        text-decoration: none;
+        color: #00b000;
+        font-weight: 600;
+
+
+    }
 
 .cta{
     text-align: center;
@@ -39,27 +87,37 @@ p{
     .cta a{
         text-decoration: none;
         display: inline-block;
-        background-color: #3d87f5;
+        background-color: #27ae60;
         color: white;
         padding: 10px 20px;
         border-radius: 5px;
         }
-
-
 h1{
     text-align: center;
+    color: #297a4b;
+    text-transform: uppercase;
+    font-size: 25px;
+}
+h2{
+    text-align: center;
+    color: #424242;
+    padding: 20px;
 }
 
 .footer-junk{
     padding: 20px;
     background: none;
     font-size: 12px;
-
-    max-width: 500px;
+    color: #424242;
+    max-width: 400px;
     font-family: sans-serif;
     margin: 0px auto;
     overflow: hidden;
     border-radius: 5px;
     text-align: center;
 
+}
+
+.footer-junk a{
+    color: #424242;
 }
