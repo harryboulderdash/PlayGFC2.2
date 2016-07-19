@@ -1,0 +1,25 @@
+{
+  "options": {
+    "open_tracking": true,
+    "click_tracking": true
+  },
+  "campaign_id": "gfc-kickoff-v1",
+  "content": {
+    "template_id": "gfc-kickoff-v1-7-18-2016",
+    "use_draft_template": false
+  },
+  "recipients": {
+    "list_id": "gfc-users-july-18-2016"
+  }
+}
+
+
+
+"recipients": [
+{
+"address": {
+"email": "mikedemick@yahoo.com",
+"name": "Mike Demick"
+}
+}
+]
