@@ -568,6 +568,7 @@ function StartTournament_RemoveIneligible($tournamentid){
             $nids = array_keys($result['node']);
 
             //return $nids;
+            //TODO: update any BANK LEDGER entries for these teams to 'Cancelled'.
 
             foreach ($nids as $nid) {
 
@@ -718,22 +719,8 @@ function completeTournament($tournamentURL){
 
 function StartTournament($tournamentid){
 
-    //check in tournament
-    //get team and match info and update GFC
-    //start tournament
-    /*
-     * TODO:call the StartTournamentValidate function to prep all the data for a proper start.
-     * TODO: if there are not a minimum # of teams, deal with it somehow
-     * TODO: Jacob, how to handle that scenario??
-     *
-     *
-     * */
-
     try {
         include_once DRUPAL_ROOT . '/includes/challonge.class.php';
-
-        //set for debug
-        //$tournamentid = 211;
 
         //debug elapsed time
         $start = microtime(true);
@@ -742,25 +729,16 @@ function StartTournament($tournamentid){
 
         //load up GFC tourney data
         $tourneywrapper = getWrapperByEntityID($tournamentid);
-        //$node = node_load($tournamentid);
-        //$tourneywrapper = entity_metadata_wrapper('node',$node);
 
+        //Close registration to insure no one joins while starting up
+        $tourneywrapper->field_tournament_status->set("Registration Closed");
+
+        // save value
+        $tourneywrapper->save();
+
+        //grab challonge ID to work with Challonge API
         $challongeid = $tourneywrapper->field_tournament_challonge_id->value();
 
-        //***************************************************************
-        //Set variables for setting maps on each match
-        //get best of value in variable to determine num of maps needed
-        $bestOfNumber = $tourneywrapper->field_tournament_best_of->value();
-
-        //get game title value for call to get maps
-        $gameTitle = $tourneywrapper->field_tournament_game_type->value()->vid;
-
-        //get game mode value for call to get maps
-        $gameMode = $tourneywrapper->field_tournament_game_modes->value()->tid;
-
-        //call function to get all maps for the tourney title and mode and store in array
-        $arrMaps = getMapsByTitleAndMode($gameTitle, $gameMode);
-        //****************************************************************
 
         //STEP 1 -- PUBLISH TOURNEY***********************
 
@@ -787,7 +765,7 @@ function StartTournament($tournamentid){
 
 
         //STEP 3 --UPDATE TEAMS WITH CHALLONGE TEAM IDs***********************
-        _watchdog_log('START TEAM UPDATES: ' . (microtime(true) - $start));
+       // _watchdog_log('START TEAM UPDATES: ' . (microtime(true) - $start));
 
 
         // Get all participants -- WORKS!
@@ -796,7 +774,7 @@ function StartTournament($tournamentid){
         $participants = $c->getParticipants($challongeid);
 
         //log response
-        _watchdog_log('Challonge respsonse getting participants for tourney: ' . $challongeid, print_r($c));
+        //_watchdog_log('Challonge respsonse getting participants for tourney: ' . $challongeid, print_r($c));
 
         // retrieve param values needed from GFC data
         //iterate through team gfc node ids
@@ -816,8 +794,7 @@ function StartTournament($tournamentid){
             $teamname = $team->field_team_id->value();
 
             //debug only
-            _watchdog_log('LOOK UP : ' .$teamname .  ' - ' . $team->field_team_name->value() . (microtime(true) - $start));
-
+            //_watchdog_log('LOOK UP : ' .$teamname .  ' - ' . $team->field_team_name->value() . (microtime(true) - $start));
 
             //update GFC teams with IDs
             foreach ($participants as $participant) {
@@ -825,8 +802,7 @@ function StartTournament($tournamentid){
                 if (str_replace(' ', '', $participant->misc) == str_replace(' ', '', $teamname)) {
 
                     //debug only
-                    _watchdog_log('MATCH FOUND : ' .$teamname .  ' - ' . $participant->misc . (microtime(true) - $start));
-
+                  //  _watchdog_log('MATCH FOUND : ' .$teamname .  ' - ' . $participant->misc . (microtime(true) - $start));
 
                     //if team matches name get id and update
                     $team->field_team_challonge_id->set((integer)$participant->id);
@@ -840,8 +816,7 @@ function StartTournament($tournamentid){
             }
         }
 
-        _watchdog_log('END TEAM UPDATES: ' . (microtime(true) - $start));
-
+        //_watchdog_log('END TEAM UPDATES: ' . (microtime(true) - $start));
 
         /*
         STEP 4 -- CREATE MATCHES IN GFC***********************
@@ -852,10 +827,10 @@ function StartTournament($tournamentid){
         $matches = $c->makeCall("tournaments/$challongeid/matches", $params);
         $matches = $c->getMatches($challongeid, $params);
 
-
         //Create corresponding GFC matches and set players, maps and hosts
         foreach ($matches as $match) {
 
+            //initial array needed to create a match object
             $values = array(
                 'type' => 'match',
                 'uid' => 1,
@@ -869,7 +844,7 @@ function StartTournament($tournamentid){
             $emw = entity_metadata_wrapper('node', $matchentity);
 
             //debug elapsed time
-            _watchdog_log('new match created: ' . (microtime(true) - $start));
+            //_watchdog_log('new match created: ' . (microtime(true) - $start));
             //****************************************************************
 
             //set field values
@@ -892,15 +867,8 @@ function StartTournament($tournamentid){
 
 
             //debug elapsed time
-            _watchdog_log('NEW MATCH CREATED: ' . (microtime(true) - $start));
+            //_watchdog_log('NEW MATCH CREATED: ' . (microtime(true) - $start));
 
-
-            /*
-             *
-             * COULD THIS BE SHARED CODE AFTER THIS POINT?
-             *
-             * */
-            //run update for all matches to get tea
 
             //clear team id's for matches
             //where participants are not yet known.
@@ -912,10 +880,9 @@ function StartTournament($tournamentid){
             unset($result2);
             $team1 = 0;
             $team2 = 0;
-
         }
 
-       // Set Teams for ACTIVE MATCHES
+       //Set Teams and Maps for ACTIVE MATCHES
         UpdateMatchesDataFromAPI($tournamentid);
 
         //Finally, set the tourney to started now that all matches are setup
@@ -1096,17 +1063,14 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     $team2_ID = $emw->field_match_team_2->field_team_challonge_id->value();
 
                     //log
-                    _watchdog_log('TEAMS EXISTED IN GFC ' . $team1_ID . ' AND ' . $team2_ID . ' LOOKED UP: ' . (microtime(true) - $start));
+                    //_watchdog_log('TEAMS EXISTED IN GFC ' . $team1_ID . ' AND ' . $team2_ID . ' LOOKED UP: ' . (microtime(true) - $start));
 
 
                 }else{ //IF MATCH HAS NO TEAM TRY THE UPDATE IN CASE IT HAS GAINED A TEAM NOW
-
                     $team1_ID =0;
                     $team2_ID =0;
-
                     //log
-                    _watchdog_log('TEAMS DID NOT EXIST IN GFC ' . $team1_ID . ' AND ' . $team2_ID . ' LOOKED UP: ' . (microtime(true) - $start));
-
+                   // _watchdog_log('TEAMS DID NOT EXIST IN GFC ' . $team1_ID . ' AND ' . $team2_ID . ' LOOKED UP: ' . (microtime(true) - $start));
                 }
 
 
@@ -1161,9 +1125,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     $arrMaps = getMapsByTitleAndMode($gameTitle, $gameMode);
 
                     //****************************************************************************
-
-
-
+                    
                     /*
                      * ***********************
                      * STEP #2 LOAD GFC TEAM OBJECTS
@@ -1251,7 +1213,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
                    * */
 
                     //debug elapsed time*****************************************************
-                    _watchdog_log('TEAMS ' . $team1Name . ' AND ' . $team2Name . ' LOOKED UP: ' . (microtime(true) - $start));
+                   // _watchdog_log('TEAMS ' . $team1Name . ' AND ' . $team2Name . ' LOOKED UP: ' . (microtime(true) - $start));
                     //debug elapsed time*****************************************************
 
 
@@ -1303,11 +1265,11 @@ function UpdateMatchesDataFromAPI($tournament_id)
                         if ($i % 2 == 0) {
                             //even maps go to 2nd seed;
                             $hostsCSV .= $host2Name;
-                            _watchdog_log('Host EVEN, choices are:' . $host2Name . 'CSV= ' . $hostsCSV, NULL,FALSE, WATCHDOG_DEBUG);
+                           // _watchdog_log('Host EVEN, choices are:' . $host2Name . 'CSV= ' . $hostsCSV, NULL,FALSE, WATCHDOG_DEBUG);
                         } else {
                             //odd maps go to 1st seed
                             $hostsCSV .= $host1Name;
-                            _watchdog_log('Host ODD, choices are:' . $host1Name . 'CSV= ' . $hostsCSV, NULL,FALSE, WATCHDOG_DEBUG);
+                           // _watchdog_log('Host ODD, choices are:' . $host1Name . 'CSV= ' . $hostsCSV, NULL,FALSE, WATCHDOG_DEBUG);
 
                         }
 
@@ -1372,13 +1334,13 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     $emw->save();
 
                     //debug elapsed time*****************************************************
-                    _watchdog_log('MATCH UPDATED: '. $match->{'suggested-play-order'} . ' ID-' . $emw->field_match_challonge_id->value() . ' WITH TEAMS' . $team1Name . ' and '. $team2Name . ' at: ' . (microtime(true) - $start));
+                   // _watchdog_log('MATCH UPDATED: '. $match->{'suggested-play-order'} . ' ID-' . $emw->field_match_challonge_id->value() . ' WITH TEAMS' . $team1Name . ' and '. $team2Name . ' at: ' . (microtime(true) - $start));
                     //debug elapsed time*****************************************************
 
                 }
 
                 //debug elapsed time*****************************************************
-                _watchdog_log('MATCH SKIPPED: '. $match->{'suggested-play-order'} . ' ID-' . $emw->field_match_challonge_id->value() .  ' at: ' . (microtime(true) - $start));
+               // _watchdog_log('MATCH SKIPPED: '. $match->{'suggested-play-order'} . ' ID-' . $emw->field_match_challonge_id->value() .  ' at: ' . (microtime(true) - $start));
                 //debug elapsed time*****************************************************
 
                 //some clean up
@@ -1400,7 +1362,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
 
         }
 
-        //if we made it here return true for sucess
+        //if we made it here return true for success
         unset($wrapper_t);
         return true;
 
@@ -1614,16 +1576,18 @@ function getTeamByTournamentByUser($currentUserUID, $tournamentURL){
         $arr_tid = array('112');
 
         //create object for tournament
-        $tourneywrapper = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
+        $tourneyWrapper = getWrapperByEntityID(getTournamentNodeIDByChallongeID($tournamentURL));
 
         //create array variable, maybe not needed but avoiding an error I saw
         $arrTeams = array();
 
         //iterate through the teams and grab the team NIDS
-        foreach($tourneywrapper->field_tournament_teams_entered->value() as $team){
-            //collect nids in array for query
-            $arrTeams[] = $team->nid;
-        };
+        if($tourneyWrapper->field_tournament_teams_entered->value()){
+            foreach($tourneyWrapper->field_tournament_teams_entered->value() as $team){
+                //collect nids in array for query
+                $arrTeams[] = $team->nid;
+            };
+        }
 
         if(!$arrTeams){return false;}
 
