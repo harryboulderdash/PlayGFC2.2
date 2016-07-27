@@ -8,8 +8,9 @@
 /**
  * Log and display the error
  * @param string $error Error to report
- * @param object/array $object Object to include with the log
+ * @param object /array $object Object to include with the log
  * @param bool $backtrace TRUE if watchdog log should include full backtrace of the error
+ * @param int $msg_type
  */
 function _watchdog_log($error, $object = NULL, $backtrace = FALSE, $msg_type = WATCHDOG_ERROR) {
     $object_msg = $object ? 'Object: ' . var_export($object, TRUE) : '';
@@ -32,6 +33,9 @@ function _watchdog_log($error, $object = NULL, $backtrace = FALSE, $msg_type = W
                 array('%function' => __FUNCTION__, '@trace' => $exc->getTraceAsString()),
                 WATCHDOG_ERROR
             );
+
+
+    TODO: check out this for better debugging <pre><?php print (htmlspecialchars (print_r (debug_backtrace(), 1) ) ); ?></pre>
     */
 }
 
@@ -1121,8 +1125,6 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     //get game mode value for call to get maps
                     $gameMode = $wrapper_t->field_tournament_game_modes->value()->tid;
 
-                    //call function to get all maps for the tourney title and mode and store in array
-                    $arrMaps = getMapsByTitleAndMode($gameTitle, $gameMode);
 
                     //****************************************************************************
                     
@@ -1225,28 +1227,12 @@ function UpdateMatchesDataFromAPI($tournament_id)
                      *
                      */
 
-                    //create variable for maps csv
-                    $mapsCSV = '';
+                    //create variable for hosts csv
                     $hostsCSV = '';
 
                     //iteriate through maps & hosts based on number needed
                     // to build csv string of maps/rounds for this match
                     for ($i = 1; $i <= $bestOfNumber; $i++) {
-                        //Set the maps
-                        // If the history array is empty, re-populate it.
-                        if (empty($arr_history)) {
-                            $arr_history = $arrMaps;
-                        }
-
-                        // Randomize the array.
-                        shuffle($arr_history);
-
-                        // Select the last value from the array.
-                        $selectedMap = array_pop($arr_history);
-
-                        // create csv string here for match value
-                        $mapsCSV .= t($selectedMap);
-
 
                         /*
                          * Check seeding and create host order based on it
@@ -1260,7 +1246,6 @@ function UpdateMatchesDataFromAPI($tournament_id)
                             $host1Name = $team2Name;
                             $host2Name = $team1Name;
                         }
-
 
                         if ($i % 2 == 0) {
                             //even maps go to 2nd seed;
@@ -1278,10 +1263,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
                         //and to hosts file
                         if ($i != $bestOfNumber) {
                             $hostsCSV .= ',';
-                            $mapsCSV .= ',';
                         }
-
-                        unset($selectedMap);
                     }
 
                     /*
@@ -1320,7 +1302,7 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     $emw->field_match_teams_all[] = (integer)$team2;
 
                     //field_match_maps‎
-                    $emw->field_match_maps->set((string)$mapsCSV);
+                    $emw->field_match_maps->set(getMapsForMatchesRandom($tournament_id));
                     $emw->field_match_host_order->set((string)$hostsCSV);
 
                     $emw->field_match_suggested_play_order->set((integer)$match->{'suggested-play-order'});
@@ -1371,6 +1353,62 @@ function UpdateMatchesDataFromAPI($tournament_id)
         _watchdog_log($exc->getMessage(),$exc);
     }
 }
+
+function getMapsForMatchesRandom($tournamentNID)
+{
+    $wrapper_t = getWrapperByEntityID($tournamentNID);
+
+    //***************************************************************
+    //Set variables for setting maps on each match
+    //get best of value in variable to determine num of maps needed
+    $bestOfNumber = $wrapper_t->field_tournament_best_of->value();
+
+    //get game title value for call to get maps
+    $gameTitle = $wrapper_t->field_tournament_game_type->value()->vid;
+
+    //get game mode value for call to get maps
+    $gameMode = $wrapper_t->field_tournament_game_modes->value()->tid;
+
+    //call function to get all maps for the tourney title and mode and store in array
+    $arrMaps = getMapsByTitleAndMode($gameTitle, $gameMode);
+
+
+    //create variable for maps csv
+    $mapsCSV = '';
+    $arr_history = array();
+
+
+    //iteriate through maps & hosts based on number needed
+    // to build csv string of maps/rounds for this match
+    for ($i = 1; $i <= $bestOfNumber; $i++) {
+        //Set the maps
+        // If the history array is empty, re-populate it.
+        if (empty($arr_history)) {
+            $arr_history = $arrMaps;
+        }
+
+        // Randomize the array.
+        shuffle($arr_history);
+
+        // Select the last value from the array.
+        $selectedMap = array_pop($arr_history);
+
+        // create csv string here for match value
+        $mapsCSV .= t($selectedMap);
+
+        //if not the last map add a comma
+        //to maps file
+        //and to hosts file
+        if ($i != $bestOfNumber) {
+            $mapsCSV .= ',';
+        }
+
+        unset($selectedMap);
+    }
+
+    return $mapsCSV;
+}
+
 
 function UpdateMatchResult($tournament_id, $match_id, $team_1_score, $team_2_score, $isDisputed = 0){
     include_once DRUPAL_ROOT . '/includes/challonge.class.php';
@@ -1529,7 +1567,7 @@ function getTeamNodeIDbyChallongeID($teamChallongeID){
     return $teamNID;
 }
 
-function getExistingTeamsByUser($currentUser,$tournament_url=null){
+function getExistingTeamsByUser($currentUser){
 
     $currentUserID = $currentUser->uid;
     $userTeams = array();
@@ -1570,6 +1608,13 @@ function getExistingTeamsByUser($currentUser,$tournament_url=null){
 function getTeamByTournamentByUser($currentUserUID, $tournamentURL){
 
     try{
+
+        //escape if this is called in a bogus context
+        if ((strlen($tournamentURL) <= 12) || ($currentUserUID == 0)) {
+
+            return false;
+        }
+        
         //retrieve user UID
         $currentUserID = $currentUserUID;
         //define variable to hold team users
@@ -1739,6 +1784,8 @@ function getChallongeMatchIDByNodeID($matchNID){
  * @param $tournamentID
  * @param $teamName
  * @param $currentUser
+ * @param $createTeam
+ * @return
  */
 function createTeamAndAddToTournament($tournamentID, $teamName, &$currentUser, $createTeam){
 
@@ -2372,7 +2419,6 @@ try {
         return 0;
     }
 
-    return $record->credit_balance;
     }
     catch (ErrorException $e)
     {
