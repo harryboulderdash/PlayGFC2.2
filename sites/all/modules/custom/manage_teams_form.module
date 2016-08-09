@@ -860,3 +860,92 @@ function manage_teams_form_user_register_form_validate($form, &$form_state)
         //return false;
     }
 }
+
+function manage_teams_form_affiliate_request_form($form, &$form_state)
+{
+    //BUILD THE FORM
+    $form = array();
+
+    $form['affiliate']['business_type'] = array(
+        '#type' => 'radios',
+        '#title' => t('Which one describes you?'),
+        //'#default_value' => 1,
+        '#required' => TRUE,
+        '#options' => array(t('Content Creator'), t('Player'), t('Other')),
+    );
+
+    $form['affiliate']['other'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Business Details:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('Please explain your business further.')),
+        '#states' => array(
+            'visible' => array(
+                ':input[name="business_type"]' => array('value' => 2),
+            ),
+        ),
+    );
+
+    $form['affiliate']['twitter'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Twitter Handle:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('twitter-handle')),
+        '#input_group' => TRUE,
+        '#field_prefix' => '@',
+    );
+
+    $form['affiliate']['twitch'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Twitch Username:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('Twitch Username')),
+        '#input_group' => TRUE,
+        '#field_prefix' => 'https://www.twitch.tv/',
+    );
+
+    $form['affiliate']['youtube'] = array(
+        '#type' => 'textfield',
+        '#title' => 'YouTube Channel:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('My-YouTube-Channel')),
+        '#input_group' => TRUE,
+        '#field_prefix' => 'https://www.youtube.com/user/',
+    );
+
+    $form['affiliate']['website'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Website URL:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('www.example.com')),
+        '#input_group' => TRUE,
+        '#field_prefix' => 'http://',
+    );
+
+    $form['affiliate']['additional'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Additional Info:',
+        '#size' => 20,
+        '#maxlength' => 50,
+        '#required' => FALSE,
+        '#attributes' => array('placeholder' => t('Provide any additional info you think is important.')),
+    );
+
+    $form['affiliate']['submit_button'] = array(
+        '#type' => 'submit',
+        '#value' => t('Submit Application'),
+    );
+    return $form;
+
+
+}
