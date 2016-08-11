@@ -414,6 +414,9 @@ p {
 .list ul li {
   position: relative;
   padding: 0 0 8px 20px;
+  margin: 20px 0;
+  line-height: 1.5;
+  font-size: 15px;
 }
 .list ul li:before {
   position: absolute;
@@ -726,8 +729,16 @@ label.error {
 }
 /* Radio Button */
 .radio__custom {
-  margin-left: 20px;
+  margin-left: 0px;
 }
+
+.form-radios .form-item {
+  vertical-align: baseline;
+  padding: 10px;
+  margin: 10px;
+
+}
+
 .radio__custom label {
   display: inline-block;
   cursor: pointer;
