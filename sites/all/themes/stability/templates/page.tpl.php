@@ -143,7 +143,7 @@ $page['content']['#prefix'] = $messages . $tabs;
                   <li><a href="//<?php print theme_get_setting('social_links_linkedin_link'); ?>"><i class="fa fa-linkedin"></i></a></li>
                 <?php endif; ?>
                 <?php if (theme_get_setting('social_links_xing_enabled')): ?>
-                  <li><a href="//<?php print theme_get_setting('social_links_xing_link'); ?>"><i class="fa fa-xing"></i></a></li>
+                  <li><a href="//<?php print theme_get_setting('social_links_xing_link'); ?>"><i class="fa fa-youtube"></i></a></li>
                 <?php endif; ?>
                 <?php if (theme_get_setting('social_links_rss_enabled')): ?>
                   <li><a href="//<?php print theme_get_setting('social_links_rss_link'); ?>" ><i class="fa fa-rss"></i></a></li>
