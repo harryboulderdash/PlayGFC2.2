@@ -1440,7 +1440,11 @@ function _uc_affiliate2_get_commission($aff_id, $level = 1, $nid = 0, $model = '
   $account = user_load($aff_id);
 
   if (isset($account->commission) && $level == 1) {
-    return $account->commission / 100; // we have a commission percentage defined specially for this affilate
+    return $account->commission . '%'; // we have a commission percentage defined specially for this affilate
+
+    //todo: this is a bug! causes user commision to be treated as flat rate but should treat as percentage
+    //maybe give this fix to vendor, fixed code is above
+    //return $account->commission / 100; // we have a commission percentage defined specially for this affilate
   }
 
   $depth = variable_get('affiliate_hierarchy_depth', 5);
