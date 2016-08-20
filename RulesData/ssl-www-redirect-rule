@@ -1,0 +1,17 @@
+{ "rules_redirect_to_www_and_ssl" : {
+    "LABEL" : "redirect to www and ssl",
+    "PLUGIN" : "reaction rule",
+    "OWNER" : "rules",
+    "TAGS" : [ "login" ],
+    "REQUIRES" : [ "php", "rules" ],
+    "ON" : { "init" : [] },
+    "IF" : [
+      { "php_eval" : { "code" : "$a = $_SERVER[\u0027SERVER_NAME\u0027];\r\nif((strpos($a, \u0027www\u0027) === false) || ($_SERVER[\u0027HTTPS\u0027] !== \u0027On\u0027)){\r\n    return true;\r\n}else\r\n{\r\n    return false;\r\n}" } }
+    ],
+    "DO" : [
+      { "php_eval" : { "code" : " \/\/$url =  \u0027https:\/\/www.playgfc.com\u0027 . $_SERVER[\u0027REQUEST_URI\u0027];\r\n\/\/drupal_goto($url);" } },
+      { "drupal_message" : { "message" : "[site:current-page:path]" } },
+      { "redirect" : { "url" : "https:\/\/www.playgfc.com\/[site:current-page:path]" } }
+    ]
+  }
+}
