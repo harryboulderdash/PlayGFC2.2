@@ -105,16 +105,16 @@ $user = $GLOBALS['user'];
         </div>
     </div>
     <div class="row" style="margin-bottom: 10">
-        <div class="col-sm-2 bg-primary">
+        <div class="col-sm-2 gfc-bg-primary">
             <strong>Date:</strong> <?php print $fields['field_tournament_time_1']->content; ?>
         </div>
-        <div class="col-sm-2 bg-primary">
+        <div class="col-sm-2 gfc-bg-primary">
             <strong>Entry:</strong> <?php print $fields['field_tournament_entry_credits']->content; ?>
         </div>
-        <div class="col-sm-2 bg-primary">
+        <div class="col-sm-2 gfc-bg-primary">
             <strong>Max Teams:</strong> <?php print $fields['field_bracket_size']->content; ?>
         </div>
-        <div class="col-sm-2 bg-primary">
+        <div class="col-sm-2 gfc-bg-primary">
             <strong>Eligible Teams:</strong> <?php print $fields['field_field_num_eligible_teams']->content; ?>
         </div>
         <div class="col-sm-4">
