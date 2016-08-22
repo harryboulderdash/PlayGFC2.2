@@ -1491,6 +1491,15 @@ function getWrapperByEntityID($nid){
     return $wrapper;
 }
 
+function getWrapperByUserID($uid){
+
+    //make updates to GFC data first
+    //$node = node_load($nid);
+    $wrapper = entity_metadata_wrapper('user',$uid);
+
+    return $wrapper;
+}
+
 function getUserByUserID($uid){
     //load and return user object
     $another_user= user_load($uid);

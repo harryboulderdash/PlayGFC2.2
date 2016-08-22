@@ -863,6 +863,20 @@ function manage_teams_form_user_register_form_validate($form, &$form_state)
 
 function manage_teams_form_affiliate_request_form($form, &$form_state)
 {
+    //load up any existing values
+    //get user info
+    $oUser = $GLOBALS['user'];
+    $userID = $oUser->uid;
+    //get wrapper
+    $w = getWrapperByUserID($userID);
+
+    //set values
+    $twitterHandle = $w->field_twitter_handle->value();
+    $twitchUsername = $w->field_twitch_handle->value();
+    $websiteURL = $w->field_user_website_url->value();
+    $youtubeChannel = $w->field_youtube_link->value();
+
+
     //BUILD THE FORM
     $form = array();
 
@@ -874,7 +888,7 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#options' => array(t('Content Creator'), t('Player'), t('Other')),
     );
 
-    $form['affiliate']['other'] = array(
+    $form['affiliate']['other_business_detail'] = array(
         '#type' => 'textarea',
         '#title' => 'Business Details:',
         '#size' => 20,
@@ -894,9 +908,11 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#size' => 20,
         '#maxlength' => 50,
         '#required' => FALSE,
-        '#attributes' => array('placeholder' => t('twitter-handle')),
+       // '#attributes' => array('placeholder' => t('twitter-handle')),
         '#input_group' => TRUE,
         '#field_prefix' => '@',
+        '#default_value' => $twitterHandle,
+
     );
 
     $form['affiliate']['twitch'] = array(
@@ -905,9 +921,11 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#size' => 20,
         '#maxlength' => 50,
         '#required' => FALSE,
-        '#attributes' => array('placeholder' => t('Twitch Username')),
+        //'#attributes' => array('placeholder' => t('Twitch Username')),
         '#input_group' => TRUE,
         '#field_prefix' => 'https://www.twitch.tv/',
+        '#default_value' => $twitchUsername,
+
     );
 
     $form['affiliate']['youtube'] = array(
@@ -916,9 +934,11 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#size' => 20,
         '#maxlength' => 50,
         '#required' => FALSE,
-        '#attributes' => array('placeholder' => t('My-YouTube-Channel')),
+       // '#attributes' => array('placeholder' => t('My-YouTube-Channel')),
         '#input_group' => TRUE,
         '#field_prefix' => 'https://www.youtube.com/user/',
+        '#default_value' => $youtubeChannel,
+
     );
 
     $form['affiliate']['website'] = array(
@@ -930,6 +950,8 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#attributes' => array('placeholder' => t('www.example.com')),
         '#input_group' => TRUE,
         '#field_prefix' => 'http://',
+        '#default_value' => $websiteURL,
+
     );
 
     $form['affiliate']['additional'] = array(
@@ -945,7 +967,55 @@ function manage_teams_form_affiliate_request_form($form, &$form_state)
         '#type' => 'submit',
         '#value' => t('Submit Application'),
     );
-    return $form;
 
+    return $form;
+}
+
+function manage_teams_form_affiliate_request_form_validate($form, &$form_state){
+
+   /*
+    * any validation here
+    *
+    * */
+}
+
+function manage_teams_form_affiliate_request_form_submit($form, &$form_state){
+    //get user info
+    $oUser = $GLOBALS['user'];
+    $userID = $oUser->uid;
+
+    //set new info values
+    $bizType = $form_state['values']['business_type'];
+    $additionalInfo = $form_state['values']['additional'];
+    $otherBiz = $form_state['values']['other_business_detail'];
+
+    //set existing social media values
+    $twitterHandle = $form_state['values']['twitter'];
+    $twitchUsername = $form_state['values']['twitch'];
+    $websiteURL = $form_state['values']['website'];
+    $youtubeChannel = $form_state['values']['youtube'];
+
+    //get wrapper
+    $w = getWrapperByUserID($userID);
+
+    //set values
+    $w->field_user_business_type->set($bizType);
+    $w->field_user_business_info->set($otherBiz);
+    $w->field_user_affiliate_info->set($additionalInfo);
+    $w->field_twitter_handle->set($twitterHandle);
+    $w->field_twitch_handle->set($twitchUsername);
+    $w->field_user_website_url->set($websiteURL);
+    $w->field_youtube_link->set($youtubeChannel);
+
+    //set status to pending
+    $w->field_user_affiliate_status->set('Pending Decision');
+
+
+    //commit changes
+    $w->save();
+
+    drupal_set_message('Thanks for your application. We will respond within two business days.');
+
+    //TODO: make notification of new application
 
 }
