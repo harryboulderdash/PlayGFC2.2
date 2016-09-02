@@ -1,0 +1,15 @@
+1. use email template and email-styles.css to create email.
+2. using the following tool, paste css inside a head/style tag, removing body tag. Run the tool.
+
+    http://templates.mailchimp.com/resources/inline-css/
+    \
+
+ 3. take result and paste into a new email file adding -inline.html to the filename.
+ 4. remove head and body tags.
+ 5. create template on Sparkpost using this html.
+ 5.5 send test from template and verfiy all looks right in all clients and links work as expected.
+ 6. update recipient list on sparkpost.
+ 7. note the list ID and template ID for the email blast.
+ 8. using POSTMAN, post to sparkpost API, in the body use the SparkPostAPI.json file.
+
+
