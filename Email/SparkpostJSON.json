@@ -3,19 +3,14 @@
     "open_tracking": true,
     "click_tracking": true
   },
-  "campaign_id": "gfc-kickoff-v1",
+  "campaign_id": "gfc-blast-9-1-16",
   "content": {
     "template_id": "gfc-blast-09012016-v1",
     "use_draft_template": false
   },
-  "recipients": [
-    {
-      "address": {
-        "email": "mikedemick@yahoo.com",
-        "name": "Mike Demick"
-      }
-    }
-  ]
+  "recipients": {
+    "list_id": "gfc-users-september-1-2016"
+  }
 }
 
 "recipients": {
