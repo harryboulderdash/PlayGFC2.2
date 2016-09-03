@@ -1,0 +1,24 @@
+//API DOCS LOCATED AT
+http://api.challonge.com/v1
+
+//Get to Challonge Data Maunally:
+
+1. https://username:api-key@api.challonge.com/v1/ + rest of url
+    a. https://gfc:api-key@api.challonge.com/v1/ + rest of url
+    b. password is API key: XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt
+
+URLs to use
+
+TOURNAMENT:     https://api.challonge.com/v1/tournaments/{tournament}.{json|xml}
+TEAMS:          https://api.challonge.com/v1/tournaments/{tournament}/participants.{json|xml}
+TEAM:           https://api.challonge.com/v1/tournaments/{tournament}/participants/{participant_id}.{json|xml}
+MATCH:        https://api.challonge.com/v1/tournaments/{tournament}/matches/{match_id}.{json|xml}
+
+
+
+2. GET FINAL RANKING VIA:
+    TEAM:  https://api.challonge.com/v1/tournaments/{tournament}/participants/{participant_id}.{json|xml}
+    FIELD IS:   final-rank    <final-rank type="integer">1</final-rank>
+
+
+
