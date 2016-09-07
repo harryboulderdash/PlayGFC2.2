@@ -9,9 +9,9 @@ BEGIN
 SELECT
 	SUM(val.field_transaction_value_value) as credit_balance
 FROM
-	PlayGFC.node bl
+	node bl
 JOIN
-	PlayGFC.field_data_field_transaction_value val
+	field_data_field_transaction_value val
 ON
 	bl.vid = val.revision_id
 JOIN
