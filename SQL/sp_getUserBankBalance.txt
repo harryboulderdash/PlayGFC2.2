@@ -1,35 +1,34 @@
-USE `PlayGFC`;
-DROP procedure IF EXISTS `sp_getUserBankBalanceCalculated`;
+USE `PlayGFC7`;
+DROP procedure IF EXISTS `sp_getTourneyTweetInterval`;
 
 DELIMITER $$
-USE `PlayGFC`$$
-CREATE DEFINER=`gfc`@`%` PROCEDURE `sp_getUserBankBalanceCalculated`(IN uid integer)
+USE `PlayGFC7`$$
+CREATE DEFINER=`gfc`@`%` PROCEDURE `sp_getTourneyTweetInterval`(IN timezonedelta integer)
+
 BEGIN
 
 SELECT
-	SUM(val.field_transaction_value_value) as credit_balance
+	TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tdate.field_tournament_time_value,INTERVAL -timezonedelta HOUR)) as 'countdown'
+    ,MAX(TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tw.field_tournament_tweets_value,INTERVAL -timezonedelta HOUR))) as 'tweet_elapsed'
+    ,MAX(tw.field_tournament_tweets_value)
+	,n.nid
+	,n.title
+	,tdate.field_tournament_time_value
 FROM
-	node bl
+	node n
 JOIN
-	field_data_field_transaction_value val
+	PlayGFC7.field_data_field_tournament_time tdate
 ON
-	bl.vid = val.revision_id
-JOIN
-	PlayGFC.field_data_field_transaction_user usr
+	n.vid = tdate.revision_id
+LEFT JOIN
+	PlayGFC7.field_data_field_tournament_tweets  tw
 ON
-	bl.vid = usr.revision_id
-JOIN
-	field_data_field_transaction_status trstatus
-ON
-	bl.vid = trstatus.revision_id
-AND
-    usr.field_transaction_user_target_id = uid
+	tw.revision_id = n.vid
 WHERE
-	bl.type = 'user_bank_ledger'
+	n.type = 'tournaments'
 AND
-	trstatus.field_transaction_status_value != 'Cancelled';
+	TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tdate.field_tournament_time_value,INTERVAL -timezonedelta HOUR)) BETWEEN 0 and 240;
 
 END$$
 
 DELIMITER ;
-
