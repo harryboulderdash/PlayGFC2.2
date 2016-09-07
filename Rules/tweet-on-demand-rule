@@ -1,0 +1,18 @@
+{ "rules_tweet_on_demand" : {
+    "LABEL" : "Tweet on Demand",
+    "PLUGIN" : "reaction rule",
+    "OWNER" : "rules",
+    "REQUIRES" : [ "php", "rules", "twitter_actions", "eck" ],
+    "ON" : { "team_members_view" : [] },
+    "IF" : [
+      { "php_eval" : { "code" : "\/\/call function to see if new tweet is needed timeForTourneyTweet()\r\nreturn autoTweet_isTweetDue();" } }
+    ],
+    "DO" : [
+      { "rules_core_twitter_actions_set_status_action" : {
+          "message" : "\u003C? \r\necho autoTweet_createTweetMessage();\r\n?\u003E",
+          "sender" : "mikedemick123"
+        }
+      }
+    ]
+  }
+}
