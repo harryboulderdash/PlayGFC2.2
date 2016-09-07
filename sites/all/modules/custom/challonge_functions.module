@@ -711,6 +711,17 @@ function completeTournament($tournamentURL){
 
         unset($w);
 
+        /*
+         * UPDATE RANKINGS FROM CHALLONGE RESULTS
+         * CALL: https://api.challonge.com/v1/tournaments/tid57c09fee82d12/participants.xml
+         * Update each TEAM with value from 'final-rank' field.
+         *
+         * XML structure is participants/participant/final-rank
+         * Field is INTEGER
+         *
+         *
+         * */
+
     }
     catch (ErrorException $e) {
         _watchdog_log('CompleteTournament ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
@@ -920,6 +931,8 @@ function finalizeTournament($tournamentID){
 
 function updateParticipantsFromChallonge($tournamentNID){
 
+    //TODO: add final-rank value update, to capture team placement at end of tourney: $participant->{'final-rank'}
+
     try{
 
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
@@ -955,6 +968,11 @@ function updateParticipantsFromChallonge($tournamentNID){
 
                     //set seed value here
                     $team->field_team_current_seed->set((integer)$participant->seed);
+
+                    //TODO: get final rank once field exists to update
+                    //TODO: Will this fail if try to convert empty or nil to integer?
+                    //$participant->{'final-rank'}
+                    //$team->field_team_tournament_rank->set((integer)$participant->{'final-rank'});
 
                     $team->save();
                 }
@@ -2478,4 +2496,83 @@ function renderBracket($uri){
         _watchdog_log('renderBracket ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
         return false;
     }
+}
+/**
+ * Helper function to find and render a block.
+ */
+function render_block_content($module, $delta) {
+    $output = '';
+    if ($block = block_load($module, $delta)) {
+        if ($build = module_invoke($module, 'block_view', $delta)) {
+            $delta = str_replace('-', '_', $delta);
+            drupal_alter(array('block_view', "block_view_{$module}_{$delta}"), $build, $block);
+
+            if (!empty($build['content'])) {
+                return is_array($build['content']) ? render($build['content']) : $build['content'];
+            }
+        }
+    }
+    return $output;
+}
+
+function autoTweet_isTweetDue(){
+    /*
+     * Check for tourney today
+     * not started yet
+     * tweet sequence on
+     * last tweet was longer than current interval,
+     * return true or false
+     *
+     */
+
+    try {
+
+        //********************GET TIME ZONE DELTA TO PASS IN
+        $date_1 =  gmdate("Y-m-d H:i:s");
+        $date_2 =  date("Y-m-d H:i:s", time());
+
+        $datetime1 = date_create($date_1);
+        $datetime2 = date_create($date_2);
+
+        $interval = date_diff($datetime1, $datetime2);
+        $timeZoneDelta =  $interval->format('%h');
+
+
+        //********************Call stored proc to caclualate credits balance for user
+        $result = db_query('call sp_getTourneyTweetInterval(:timezonedelta);', array(':timezonedelta' => $timeZoneDelta));
+
+        //grab result
+        $record = $result->fetchObject();
+
+        //TODO get needed values and decide if tweet is needed or not
+        $minutesUntilTourney = $record->countdown;
+
+        $minutesSinceTweet = $record->tweet_elapsed;
+
+    }
+    catch (ErrorException $e)
+    {
+        _watchdog_log('autoTweet_isTweetDue ' . $e->getMessage() . ' ' . $e->getPrevious() . ' ' . $e->getLine() . ' ' . $e->getTraceAsString());
+        return false;
+    }
+
+
+    return true;
+
+}
+
+function autoTweet_createTweetMessage(){
+
+    /*
+     * get tourney info
+     * get other usefull info
+     * construct a string for the tweet content
+     * use tinyurl if possible
+     *
+     * */
+    $twMessage = 'The twitter started getting rough, the tiny tweet was lost...';
+
+    return $twMessage;
+
+
 }

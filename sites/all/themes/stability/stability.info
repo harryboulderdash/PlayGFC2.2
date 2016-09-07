@@ -22,6 +22,10 @@ stylesheets[all][] = css/theme.css
 stylesheets[all][] = css/theme-elements.css
 stylesheets[all][] = css/animate.min.css
 stylesheets[all][] = css/skins/red.css
+stylesheets[all][] = css/gfc-styles.css
+stylesheets[all][] = css/rrssb.css
+stylesheets[all][] = css/rrssb-container.css
+
 
 scripts[] = vendor/jquery-migrate-1.2.1.min.js 
 scripts[] = vendor/bootstrap.js 
@@ -38,7 +42,9 @@ scripts[] = vendor/jquery.appear.js
 scripts[] = vendor/jquery.stellar.min.js
 scripts[] = vendor/snap.svg-min.js
 scripts[] = vendor/mediaelement/mediaelement-and-player.min.js
-scripts[] = vendor/circliful/js/jquery.circliful.min.js
+scripts[] = vendor/circliful/js/jquery.circliful.min.
+scripts[] = vendor/rrssb.js
+scripts[] = vendor/rrssb.min.js
 scripts[] = js/custom.js
 
 features[] = name

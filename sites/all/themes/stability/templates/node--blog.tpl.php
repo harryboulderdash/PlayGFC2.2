@@ -147,7 +147,9 @@ foreach($fields as $field) {
       </div>
     <?php endif; ?>
   <?php endif; ?>
-
+  <?php
+    print render_block_content('rrssb', 0);
+  ?>
 </article>
 
 <?php hide($content['links']['comment']); hide($content['field_blog_type']); hide($content['field_images']);  hide($content['field_masonry_size']); hide($content['field_video_iframe']); hide($content['field_tags']); hide($content['field_audio']); hide($content['field_audio_iframe']); hide($content['comments']); ?>
