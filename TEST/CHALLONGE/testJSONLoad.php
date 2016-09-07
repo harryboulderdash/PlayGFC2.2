@@ -1,6 +1,12 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: mikedemick
+ * Date: 9/3/16
+ * Time: 2:40 PM
+ */
 
-
-
+$strJSON = '
 [
   {"participant":
     {"id":44839568,
@@ -63,4 +69,26 @@
       "can_check_in":false,
       "checked_in":false,
       "reactivatable":false,
-      "group_player_ids":[]}}]
+      "group_player_ids":[]}}]';
+
+///*//$json = '{"foo-bar": 12345}';
+//
+//$obj = json_decode($strJSON);
+//var_dump($obj);
+//print_r($obj[0]);
+//
+//// Loop through Object
+//  foreach($obj->participant as $team) {
+//      echo $team->final_rank . "<br>";
+//  }*/
+
+$c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
+$participants = $c->getParticipants('2656428');
+
+foreach ($participants as $participant) {
+
+    print_r(str_replace(' ', '', $participant->{'final-rank'}));
+
+}
+
+
