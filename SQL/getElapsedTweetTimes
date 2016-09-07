@@ -1,0 +1,22 @@
+SELECT
+	TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tdate.field_tournament_time_value,INTERVAL -4 HOUR)) as 'countdown'
+    ,MAX(TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tw.field_tournament_tweets_value,INTERVAL -4 HOUR))) as 'tweet_elapsed'
+    ,MAX(tw.field_tournament_tweets_value)
+	,n.nid
+	,n.title
+	,tdate.field_tournament_time_value
+FROM
+	node n
+JOIN
+	PlayGFC7.field_data_field_tournament_time tdate
+ON
+	n.vid = tdate.revision_id
+LEFT JOIN
+	PlayGFC7.field_data_field_tournament_tweets  tw
+ON
+	tw.revision_id = n.vid
+WHERE
+	n.type = 'tournaments'
+AND
+	TIMESTAMPDIFF(MINUTE,NOW(),DATE_ADD(tdate.field_tournament_time_value,INTERVAL -5 HOUR)) BETWEEN 0 and 240
+
