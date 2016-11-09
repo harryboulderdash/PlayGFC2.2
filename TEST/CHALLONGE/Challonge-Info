@@ -5,6 +5,10 @@ http://api.challonge.com/v1
 
 1. https://username:api-key@api.challonge.com/v1/ + rest of url
     a. https://gfc:api-key@api.challonge.com/v1/ + rest of url
+        (
+        example:
+        https://gfc:XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt@api.challonge.com/v1/tournaments/tid56f99b98d283e/participants.xml
+        )
     b. password is API key: XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt
 
 URLs to use
