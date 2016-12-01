@@ -711,6 +711,24 @@ function completeTournament($tournamentURL){
 
         unset($w);
 
+
+        /*
+         * STEP 2 UPDATE TEAM WHICH UPDATES FINAL RANKINGS
+         * */
+
+        updateParticipantsFromChallonge($tid);
+
+
+        /*
+         * STEP 3
+         *
+         * 3. Populate the 'User_Rankings' entity from team entity based on rankings, just 1st - 3rd place.
+         * */
+
+
+
+
+
         /*
          * UPDATE RANKINGS FROM CHALLONGE RESULTS
          * CALL: https://api.challonge.com/v1/tournaments/tid57c09fee82d12/participants.xml
@@ -719,6 +737,11 @@ function completeTournament($tournamentURL){
          * XML structure is participants/participant/final-rank
          * Field is INTEGER
          *
+         *
+         * 1. finalize tournament call to challonge
+         * 2. run the updateParticipantsFromChallonge($tournamentNID)
+         * updateParticipantsFromChallonge($tournamentNID);
+         * 3. Populate the 'User_Rankings' entity from team entity based on rankings, just 1st - 3rd place.
          *
          * */
 
@@ -923,6 +946,11 @@ function finalizeTournament($tournamentID){
      * update status of Tournament
      * Create a Tweet about winner once Twitter API setup
      *
+     * 1. finalize tournament call to challonge
+     * 2. run the updateParticipantsFromChallonge($tournamentNID)
+     * updateParticipantsFromChallonge($tournamentNID);
+     * 3. Populate the 'User_Rankings' entity from team entity based on rankings, just 1st - 3rd place.
+     *
      *
      * */
 
@@ -971,8 +999,10 @@ function updateParticipantsFromChallonge($tournamentNID){
 
                     //TODO: get final rank once field exists to update
                     //TODO: Will this fail if try to convert empty or nil to integer?
+                    //TODO: FIGURE OUT WHICH 3rd Place played winner and mark other 4th
+                    //tid57814f350a21a
                     //$participant->{'final-rank'}
-                    //$team->field_team_tournament_rank->set((integer)$participant->{'final-rank'});
+                    $team->field_team_tournament_rank->set((integer)$participant->{'final-rank'});
 
                     $team->save();
                 }
@@ -1328,7 +1358,8 @@ function UpdateMatchesDataFromAPI($tournament_id)
                     $emw->field_match_team_1_seed->set($team1Seed);
                     $emw->field_match_team_2_seed->set($team2Seed);
 
-
+                   /* //SET FINAL RANKING OF TEAM, note: there are two 3rd place teams in Challonge, second step will separate into 3rd and 4th place.
+                    $emw->field_team_tournament_rank->set((integer)$match->{'final_rank'});*/
 
                     //save the match updates
                     $emw->save();
@@ -2548,6 +2579,8 @@ function autoTweet_isTweetDue(){
         $minutesUntilTourney = $record->countdown;
 
         $minutesSinceTweet = $record->tweet_elapsed;
+
+        drupal_set_message('Minutes until Tourney: ' . $minutesUntilTourney);
 
     }
     catch (ErrorException $e)
