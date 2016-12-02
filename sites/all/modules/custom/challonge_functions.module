@@ -704,7 +704,6 @@ function completeTournament($tournamentURL){
         //update challonge to lock results and set final rankings
         $tournament = $c->makeCall("tournaments/$tournamentURL/finalize", $params, "post");
 
-        //$c->finalizeTournament($tournamentURL);
 
         //update tourney status in GFC
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
@@ -714,7 +713,6 @@ function completeTournament($tournamentURL){
         $w->save();
 
         unset($w);
-
 
         /*
          * STEP 2 UPDATE TEAM WHICH UPDATES FINAL RANKINGS
@@ -728,9 +726,6 @@ function completeTournament($tournamentURL){
          *
          * 3. Populate the 'User_Rankings' entity from team entity based on rankings, just 1st - 3rd place.
          * */
-
-
-
 
 
         /*
