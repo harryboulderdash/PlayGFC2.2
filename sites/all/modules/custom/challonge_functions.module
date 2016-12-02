@@ -699,8 +699,12 @@ function completeTournament($tournamentURL){
     try{
         $c = new ChallongeAPI('XqrMnBPs15MvmX0izddB4zyIHKswRCoaIAyq4cTt');
 
+        $params = array();
+
         //update challonge to lock results and set final rankings
-        $c->finalizeTournament($tournamentURL);
+        $tournament = $c->makeCall("tournaments/$tournamentURL/finalize", $params, "post");
+
+        //$c->finalizeTournament($tournamentURL);
 
         //update tourney status in GFC
         $tid = getTournamentNodeIDByChallongeID($tournamentURL);
